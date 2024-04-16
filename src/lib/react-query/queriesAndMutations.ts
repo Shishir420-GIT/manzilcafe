@@ -1,6 +1,6 @@
 import { QUERY_KEYS } from "@/lib/react-query/queryKeys";
-import { INewPost, INewUser, IUpdatePost, IUpdateUser } from "@/types";
-import { useQuery, useMutation, useQueryClient, useInfiniteQuery,} from "@tanstack/react-query";
+import { INewPost, INewUser,} from "@/types";
+import { useMutation, useQueryClient,} from "@tanstack/react-query";
 import { createUserAccount, signInAccount, signOutAccount, createPost,} from "@/lib/appwrite/api";
 
 export const useCreateUserAccount = () => {
