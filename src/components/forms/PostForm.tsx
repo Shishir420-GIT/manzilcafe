@@ -130,4 +130,4 @@ const PostForm = ({ post }: PostFormProps) => {
     )
 }
 
-export default PostForm
+export default PostForm;

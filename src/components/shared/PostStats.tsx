@@ -30,4 +30,4 @@ const PostStats = ( { post, userId }: PostStatsProps) => {
   )
 }
 
-export default PostStats
+export default PostStats;

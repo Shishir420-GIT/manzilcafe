@@ -30,7 +30,7 @@ export async function createUserAccount(user: INewUser) {
         console.log(error);
         return error;
     }
-}
+};
 
 export async function saveUserToDB(user: {
     accountId: string;
@@ -54,7 +54,7 @@ export async function saveUserToDB(user: {
         console.log(error)
         return null;
     }
-}
+};
 
 export async function signInAccount(user: { email: string; password: string }) {
     try {
@@ -66,7 +66,7 @@ export async function signInAccount(user: { email: string; password: string }) {
         //console.log("Error in sesssion")
         console.log(error);
     }
-  }
+};
 
 export async function getAccount() {
     try {
@@ -78,7 +78,7 @@ export async function getAccount() {
     } catch (error) {
       console.log(error);
     }
-  }
+};
 
 export async function getCurrentUser(){
     try{
@@ -102,7 +102,7 @@ export async function getCurrentUser(){
         console.log(error)
         return null;
     }
-}
+};
 
 export async function signOutAccount() {
     try{
@@ -111,9 +111,8 @@ export async function signOutAccount() {
     }
     catch(error){
         console.log(error)
-    }
-    
-}
+    }  
+};
 
 // ============================== UPLOAD FILE
 export async function uploadFile(file: File) {
@@ -128,7 +127,7 @@ export async function uploadFile(file: File) {
     } catch (error) {
       console.log(error);
     }
-}
+};
   
 // ============================== GET FILE URL
 export function getFilePreview(fileId: string) {
@@ -148,7 +147,7 @@ export function getFilePreview(fileId: string) {
     } catch (error) {
         console.log(error);
     }
-}
+};
 
 // ============================== DELETE FILE
 export async function deleteFile(fileId: string) {
@@ -159,7 +158,7 @@ export async function deleteFile(fileId: string) {
     } catch (error) {
       console.log(error);
     }
-}
+};
 
 export async function createPost(post: INewPost) {
     try {
@@ -202,7 +201,7 @@ export async function createPost(post: INewPost) {
     } catch (error) {
       console.log(error);
     }
-  }
+};
 
 export async function getRecentPosts(){
   const posts = await databases.listDocuments(
@@ -214,7 +213,7 @@ export async function getRecentPosts(){
   if(!posts) throw Error;
 
   return posts;
-}
+};
 
 
 export async function likedPost(postId: string, likesArray: string[]){
@@ -234,7 +233,7 @@ export async function likedPost(postId: string, likesArray: string[]){
   catch(error){
     console.log(error)
   }
-}
+};
 
 export async function savedPost(postId: string, userId: string){
   try{
@@ -254,7 +253,7 @@ export async function savedPost(postId: string, userId: string){
   catch(error){
     console.log(error)
   }
-}
+};
 
 export async function deleteSavedPost(savedRecordId: string){
   try{
@@ -270,4 +269,4 @@ export async function deleteSavedPost(savedRecordId: string){
   catch(error){
     console.log(error)
   }
-}
+};
