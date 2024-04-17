@@ -1,9 +1,9 @@
-import {useCallback, useState} from 'react'
-import {FileWithPath, useDropzone} from 'react-dropzone'
 import { Button } from '../ui/button'
+import { useCallback, useState } from 'react'
+import {FileWithPath, useDropzone} from 'react-dropzone'
 
 type FileUploaderProps = {
-    fieldChange: (files: File[]) => void;
+    fieldChange: (FILES: File[]) => void;
     mediaUrl: string;
 }
 
@@ -21,8 +21,8 @@ const FileUploader = ( {fieldChange, mediaUrl}: FileUploaderProps) => {
         onDrop,
         accept: {
             'image/*': ['.png', '.jpeg', '.jpg', '.svg']
-        },
-    });
+        }
+    })
     
     return (
         <div {...getRootProps()} className='flex flex-center flex-col bg-dark-3 rounded-xl cursor-pointer'>
