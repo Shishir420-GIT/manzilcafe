@@ -10,9 +10,9 @@ import { useCreatePost } from "@/lib/react-query/queriesAndMutations"
 import { useUserContext } from "@/context/AuthContext"
 import { useToast } from "../ui/use-toast"
 import { useNavigate } from "react-router-dom"
-import FileUploader from "../shared/FileUploader"
 import { Models } from "appwrite"
 import { Loader } from "lucide-react"
+import FileUploader from "../shared/FileUploader"
 
 type PostFormProps = {
     post? : Models.Document;
@@ -22,6 +22,9 @@ const PostForm = ({ post }: PostFormProps) => {
     const { user } = useUserContext();
     const { toast } = useToast();
     const navigate = useNavigate();
+    const { mutateAsync: createPost, isPending: isLoadingCreate } =
+    useCreatePost();
+
     const form = useForm<z.infer<typeof PostValidation>>({
         resolver: zodResolver(PostValidation),
         defaultValues: {
@@ -31,17 +34,15 @@ const PostForm = ({ post }: PostFormProps) => {
             tags: post ? post.tags.join(',') : ''
         },
     });
-    const { mutateAsync: createPost, isPending: isLoadingCreate } =
-    useCreatePost();
             
     // 2. Define a submit handler.
-    const handleSubmit = async (value: z.infer<typeof PostValidation>) => {
-        console.log({...value})
-        console.log(user.id)
+    async function onSubmit(values: z.infer<typeof PostValidation>) {
+    //console.log({...values})
+    //console.log(user.id)
         const newPost = await createPost({
-        ...value,
-        userId: user.id,
-        });
+      ...values,
+      userId: user.id,
+    });
         if (!newPost) {
             toast({title: 'Please try again.'})
         }
@@ -49,7 +50,7 @@ const PostForm = ({ post }: PostFormProps) => {
     }
     return (
         <Form {...form}>
-            <form onSubmit={form.handleSubmit(handleSubmit)} className="flex flex-col gap-9 w-full max-w-5xl">
+            <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-9 w-full max-w-5xl">
             <FormField
                 control={form.control}
                 name="caption"
@@ -96,15 +97,14 @@ const PostForm = ({ post }: PostFormProps) => {
                 name="tags"
                 render={({ field }) => (
                 <FormItem>
-                    <FormLabel className="shad-form_label">
-                        Add Tags (separated by comma)
-                    </FormLabel>
+                    <FormLabel className="shad-form_label">Add Tags
+                    (separated by comma)</FormLabel>
                     <FormControl>
-                        <Input
-                            type="text"
-                            className="shad-input"
-                            placeholder="Art, Expression, Learn, etc."
-                            {...field}/>
+                    <Input
+                        type="text"
+                        className="shad-input"
+                        placeholder="Art, Expression, Learn, etc."
+                        {...field}/>
                     </FormControl>
                     <FormMessage className="shad-form_message"/>
                 </FormItem>

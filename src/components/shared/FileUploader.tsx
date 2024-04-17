@@ -1,9 +1,9 @@
-import {useCallback, useState} from 'react'
-import {FileWithPath, useDropzone} from 'react-dropzone'
 import { Button } from '../ui/button'
+import { useCallback, useState } from 'react'
+import {FileWithPath, useDropzone} from 'react-dropzone'
 
 type FileUploaderProps = {
-    fieldChange: (files: File[]) => void;
+    fieldChange: (FILES: File[]) => void;
     mediaUrl: string;
 }
 
