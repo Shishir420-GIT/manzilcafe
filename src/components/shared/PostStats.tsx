@@ -5,7 +5,10 @@ type PostStatsProps = {
     userId: string;
 }
 const PostStats = ( { post, userId }: PostStatsProps) => {
-  return (
+    //comments to be removed later
+    console.log(post)
+    console.log(userId)
+    return (
     <div className="flex justify-between items-center z-20">
         <div className="flex gap-2 mr-5">
             <img
