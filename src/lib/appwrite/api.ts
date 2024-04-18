@@ -216,7 +216,7 @@ export async function getRecentPosts(){
 };
 
 
-export async function likedPost(postId: string, likesArray: string[]){
+export async function likePost(postId: string, likesArray: string[]){
   try{
     const updatePost = await databases.updateDocument(
       appwriteConfig.databaseId,
@@ -235,9 +235,9 @@ export async function likedPost(postId: string, likesArray: string[]){
   }
 };
 
-export async function savedPost(postId: string, userId: string){
+export async function savePost(postId: string, userId: string){
   try{
-    const updatePost = await databases.updateDocument(
+    const updatePost = await databases.createDocument(
       appwriteConfig.databaseId,
       appwriteConfig.savesCollectionId,
       ID.unique(),
@@ -257,16 +257,77 @@ export async function savedPost(postId: string, userId: string){
 
 export async function deleteSavedPost(savedRecordId: string){
   try{
-    const updatePost = await databases.updateDocument(
+    const statusCode = await databases.deleteDocument(
       appwriteConfig.databaseId,
       appwriteConfig.savesCollectionId,
       savedRecordId,
-    )
-    if(!updatePost) throw Error;
+    );
+    if(!statusCode) throw Error;
 
     return {status: 'ok'};
   }
   catch(error){
     console.log(error)
+  }
+};
+
+export async function getPostById(postId: string){
+  try {
+      const post = await databases.getDocument(
+          appwriteConfig.databaseId,
+          appwriteConfig.postCollectionId,
+          postId
+      )
+      if(!post) {
+          throw new Error('Post not found')
+      }
+
+      return post
+  } catch (error) {
+      
+  }
+}
+
+
+export async function updatePost(post: INewPost) {
+  try {
+    // Upload file to appwrite storage
+    const uploadedFile = await uploadFile(post.file[0]);
+
+    if (!uploadedFile) throw Error;
+
+    // Get file url
+    const fileUrl = getFilePreview(uploadedFile.$id);
+    if (!fileUrl) {
+      await deleteFile(uploadedFile.$id);
+      throw Error;
+    }
+
+    // Convert tags into array
+    const tags = post.tags?.replace(/ /g, "").split(",") || [];
+
+    // Create post
+    const newPost = await databases.createDocument(
+      appwriteConfig.databaseId,
+      appwriteConfig.postCollectionId,
+      ID.unique(),
+      {
+        creator: post.userId,
+        caption: post.caption,
+        imageUrl: fileUrl,
+        imageId: uploadedFile.$id,
+        location: post.location,
+        tags: tags,
+      }
+    );
+
+    if (!newPost) {
+      await deleteFile(uploadedFile.$id);
+      throw Error;
+    }
+
+    return newPost;
+  } catch (error) {
+    console.log(error);
   }
 };

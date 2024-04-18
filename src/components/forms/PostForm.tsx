@@ -16,9 +16,10 @@ import FileUploader from "../shared/FileUploader"
 
 type PostFormProps = {
     post? : Models.Document;
+    action: 'Create' | 'Update'
 }
 
-const PostForm = ({ post }: PostFormProps) => {
+const PostForm = ({ post, action }: PostFormProps) => {
     const { user } = useUserContext();
     const { toast } = useToast();
     const navigate = useNavigate();
