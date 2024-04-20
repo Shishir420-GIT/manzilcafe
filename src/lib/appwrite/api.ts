@@ -1,5 +1,5 @@
 import { ID, Query } from "appwrite";
-import { INewPost, INewUser } from "@/types";
+import { INewPost, INewUser, IUpdatePost } from "@/types";
 import { appwriteConfig, account, databases, storage, avatars } from "./config";
 
 export async function createUserAccount(user: INewUser) {
@@ -216,7 +216,7 @@ export async function getRecentPosts(){
 };
 
 
-export async function likedPost(postId: string, likesArray: string[]){
+export async function likePost(postId: string, likesArray: string[]){
   try{
     const updatePost = await databases.updateDocument(
       appwriteConfig.databaseId,
@@ -235,9 +235,9 @@ export async function likedPost(postId: string, likesArray: string[]){
   }
 };
 
-export async function savedPost(postId: string, userId: string){
+export async function savePost(postId: string, userId: string){
   try{
-    const updatePost = await databases.updateDocument(
+    const updatePost = await databases.createDocument(
       appwriteConfig.databaseId,
       appwriteConfig.savesCollectionId,
       ID.unique(),
@@ -257,12 +257,12 @@ export async function savedPost(postId: string, userId: string){
 
 export async function deleteSavedPost(savedRecordId: string){
   try{
-    const updatePost = await databases.updateDocument(
+    const statusCode = await databases.deleteDocument(
       appwriteConfig.databaseId,
       appwriteConfig.savesCollectionId,
       savedRecordId,
-    )
-    if(!updatePost) throw Error;
+    );
+    if(!statusCode) throw Error;
 
     return {status: 'ok'};
   }
@@ -270,3 +270,108 @@ export async function deleteSavedPost(savedRecordId: string){
     console.log(error)
   }
 };
+
+export async function getPostById(postId: string){
+  try {
+      const post = await databases.getDocument(
+          appwriteConfig.databaseId,
+          appwriteConfig.postCollectionId,
+          postId
+      )
+      if(!post) {
+          throw new Error('Post not found')
+      }
+
+      return post
+  } catch (error) {
+      
+  }
+}
+
+
+export async function updatePost(post: IUpdatePost) {
+  try{
+      const hasFileToUpdate = post.file.length > 0;
+      let image = {
+        imageUrl: post.imageUrl,
+        imageId: post.imageId
+      };
+
+      if(hasFileToUpdate){
+        const uploadedFile = await uploadFile(post.file[0]);
+
+        if (!uploadedFile) throw Error;
+    
+        // Get file url
+        const fileUrl = getFilePreview(uploadedFile.$id);
+        if (!fileUrl) {
+          await deleteFile(uploadedFile.$id);
+          throw Error;
+        }
+        image = {
+          ...image, imageUrl: fileUrl, imageId: uploadedFile.$id
+        };
+      }
+    // Upload file to appwrite storage
+
+
+    // Convert tags into array
+    const tags = post.tags?.replace(/ /g, "").split(",") || [];
+
+    // Create post
+    const updatedPost = await databases.updateDocument(
+      appwriteConfig.databaseId,
+      appwriteConfig.postCollectionId,
+      post.postId,
+      {
+        caption: post.caption,
+        imageUrl: image.imageUrl,
+        imageId: image.imageId,
+        location: post.location,
+        tags: tags,
+      }
+    );
+
+    // Failed to update
+    if (!updatedPost) {
+      // Delete new file that has been recently uploaded
+      if (hasFileToUpdate) {
+        await deleteFile(image.imageId);
+      }
+
+      // If no new file uploaded, just throw error
+      throw Error;
+    }
+
+    // Safely delete old file after successful update
+    if (hasFileToUpdate) {
+      await deleteFile(post.imageId);
+    }
+
+    return updatedPost;
+
+    return updatedPost;
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+export async function deletePost(postId?: string, imageId?: string) {
+  if (!postId || !imageId) return;
+
+  try {
+    const statusCode = await databases.deleteDocument(
+      appwriteConfig.databaseId,
+      appwriteConfig.postCollectionId,
+      postId
+    );
+
+    if (!statusCode) throw Error;
+
+    await deleteFile(imageId);
+
+    return { status: "Ok" };
+  } catch (error) {
+    console.log(error);
+  }
+}
