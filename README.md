@@ -7,8 +7,6 @@ View the base app here - [Manzil Cafe ☕️](https://manzilcafe.vercel.app)
 
 ![image](https://github.com/user-attachments/assets/5a153e4f-a18e-465e-a9c1-55c39b6dbf0f)
 
-[image](https://manzilcafe.vercel.app)
-
 ## Key Features:
 - Created Authentication,
 - Infinite scroll,
@@ -23,4 +21,14 @@ View the base app here - [Manzil Cafe ☕️](https://manzilcafe.vercel.app)
 
 ## Pre-requisites
 - node.js
-- Appwrite account and important keys
+- Appwrite account and Below mentioned keys should me mentioned in the the environmental variable
+- - VITE_APPWRITE_PROJECT_ID=''
+  - VITE_APPWRITE_STORAGE_ID=''
+  - VITE_APPWRITE_DATABASE_ID=''
+  - VITE_APPWRITE_API_URL=''
+  - VITE_APPWRITE_USER_COLLECTION_ID=''
+  - VITE_APPWRITE_POST_COLLECTION_ID=''
+  - VITE_APPWRITE_SAVES_COLLECTION_ID=''
+ 
+## How to Run the app:
+- Use 'npm run dev'
