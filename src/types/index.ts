@@ -1,48 +1,61 @@
-export type INavLink = {
-    imgURL: string;
-    route: string;
-    label: string;
-  };
-  
-  export type IUpdateUser = {
-    userId: string;
-    name: string;
-    bio: string;
-    imageId: string;
-    imageUrl: URL | string;
-    file: File[];
-  };
-  
-  export type INewPost = {
-    userId: string;
-    caption: string;
-    file: File[];
-    location?: string;
-    tags?: string;
-  };
-  
-  export type IUpdatePost = {
-    postId: string;
-    caption: string;
-    imageId: string;
-    imageUrl: URL;
-    file: File[];
-    location?: string;
-    tags?: string;
-  };
-  
-  export type IUser = {
-    id: string;
-    name: string;
-    username: string;
-    email: string;
-    imageUrl: string;
-    bio: string;
-  };
-  
-  export type INewUser = {
-    name: string;
-    email: string;
-    username: string;
-    password: string;
-  };
+export interface User {
+  id: string;
+  email: string;
+  name: string;
+  avatar_url?: string;
+  role: 'visitor' | 'host' | 'moderator';
+  created_at: string;
+}
+
+export interface Cafe {
+  id: string;
+  host_id: string;
+  name: string;
+  description: string;
+  theme: string;
+  capacity: number;
+  created_at: string;
+  current_members?: number;
+  host?: User;
+}
+
+export interface Message {
+  id: string;
+  cafe_id: string;
+  sender_id: string;
+  content: string;
+  message_type: 'user' | 'ai' | 'system' | 'voice';
+  timestamp: string;
+  audio_data?: string;
+  sender?: User;
+}
+
+export interface Order {
+  id: string;
+  cafe_id: string;
+  user_id: string;
+  item_name: string;
+  quantity: number;
+  price: number;
+  status: 'pending' | 'completed' | 'cancelled';
+  timestamp: string;
+  user?: User;
+}
+
+export interface CafeMember {
+  id: string;
+  cafe_id: string;
+  user_id: string;
+  status: 'active' | 'pending' | 'left';
+  joined_at: string;
+  user?: User;
+}
+
+export interface MenuItem {
+  id: string;
+  name: string;
+  description: string;
+  price: number;
+  category: 'coffee' | 'tea' | 'pastry' | 'snack';
+  image_url?: string;
+}

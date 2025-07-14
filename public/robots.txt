@@ -1,0 +1,30 @@
+# ManzilCafe 2.0 - Robots.txt
+# Virtual Social Café Application
+
+User-agent: *
+Allow: /
+
+# Disallow sensitive areas
+Disallow: /api/
+Disallow: /admin/
+Disallow: /private/
+Disallow: /internal/
+
+# Allow important pages
+Allow: /
+Allow: /about
+Allow: /contact
+Allow: /privacy
+Allow: /terms
+
+# Crawl-delay for respectful crawling
+Crawl-delay: 1
+
+# Sitemap (if you have one)
+# Sitemap: https://manzilcafe.com/sitemap.xml
+
+# Contact information for crawler operators
+# Contact: admin@manzilcafe.com
+
+# Last updated
+# Last-Modified: 2024-01-15 
