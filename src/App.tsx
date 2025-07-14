@@ -34,7 +34,6 @@ const FocusRoom = ({ currentUser, onExit }: FocusRoomProps) => {
     },
     {
       name: "Deep Work",
-                    <span>Enter Focus Room</span>
       artist: "Focus Flow"
     }
   ];
