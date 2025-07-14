@@ -2,9 +2,18 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="./assets/images/profile.png" />
+    <meta http-equiv="Content-Security-Policy" content="
+      default-src 'self';
+      script-src 'self' 'unsafe-inline' https://www.youtube.com https://www.youtube.com/iframe_api;
+      connect-src 'self' https://*.supabase.co wss://*.supabase.co https://generativelanguage.googleapis.com;
+      frame-src https://www.youtube.com https://www.youtube-nocookie.com;
+      img-src 'self' https://i.ytimg.com https://images.pexels.com data:;
+      style-src 'self' 'unsafe-inline';
+    ">
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Programatically</title>
+    <title>Manziil Café - Multi-Tenant Social Café Experience</title>
+    <meta http-equiv="Content-Security-Policy" content="script-src 'self' https://www.youtube.com https://www.youtube-nocookie.com 'unsafe-inline' 'unsafe-eval';" />
   </head>
   <body>
     <div id="root"></div>

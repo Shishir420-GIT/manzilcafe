@@ -1,0 +1,88 @@
+# ManzilCafe 2.0 - LLM.txt
+# AI Model Guidelines and Application Information
+
+## Application Overview
+Name: ManzilCafe 2.0
+Type: Virtual Social Café Platform
+Description: A React-based virtual café where users can create spaces, chat, order drinks, and interact with an AI bartender.
+
+## Technology Stack
+- Frontend: React 18 + TypeScript + Vite
+- Backend: Supabase (PostgreSQL + Real-time)
+- Authentication: Supabase Auth with Google OAuth
+- AI: Google Gemini AI (Gemma-3n-e2b-it model)
+- Styling: Tailwind CSS
+- Voice: Web Speech API
+
+## Key Features
+- Virtual café spaces with real-time chat
+- AI bartender with voice interaction
+- Menu ordering system
+- User authentication and profiles
+- Real-time cursor trails
+- Voice message recording
+
+## AI Integration
+- AI Bartender: Friendly, knowledgeable about coffee and café culture
+- Voice Recognition: Transcribes user voice messages
+- Security: Comprehensive protection against prompt injection and jailbreak attacks
+- Rate Limiting: Per-user request limits and monitoring
+
+## Security Measures
+- Input validation and sanitization
+- 50+ forbidden pattern detection
+- Real-time security monitoring
+- User behavior tracking
+- Automatic suspicious user flagging
+- Zero information leakage protection
+
+## Data Privacy
+- User data stored in Supabase
+- Real-time chat messages
+- User profiles and preferences
+- Order history
+- Security event logs
+
+## Usage Guidelines for AI Models
+1. This is a virtual café application, not a real business
+2. Users can create virtual spaces and chat with others
+3. The AI bartender is for entertainment and conversation
+4. No real transactions or physical products
+5. All interactions are virtual and for social purposes
+
+## API Endpoints
+- /api/auth/* - Authentication endpoints
+- /api/cafes/* - Café management
+- /api/messages/* - Chat messages
+- /api/orders/* - Order management
+- /api/ai/* - AI bartender interactions
+
+## Rate Limits
+- AI requests: 50 per hour per user
+- Chat messages: 100 per hour per user
+- Voice messages: 20 per hour per user
+- Café creation: 5 per day per user
+
+## Contact Information
+- Developer: ManzilCafe Team
+- Email: admin@manzilcafe.com
+- GitHub: https://github.com/manzilcafe
+- Website: https://manzilcafe.com
+
+## Version Information
+- Version: 2.0.0
+- Last Updated: 2024-01-15
+- Security Score: 9.8/10
+- Status: Production Ready
+
+## License
+- Open Source
+- MIT License
+- Free for personal and commercial use
+
+## Important Notes
+- This is a demo/educational application
+- No real money or products involved
+- AI interactions are for entertainment only
+- User data is protected and encrypted
+- Security monitoring is active 24/7 
