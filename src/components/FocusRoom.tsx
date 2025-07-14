@@ -1,11 +1,19 @@
 import { useState, useEffect, useRef } from 'react';
-import { Play, Pause, Square, Volume2, VolumeX, Clock, Coffee, ArrowLeft } from 'lucide-react';
+import { Play, Pause, Square, Volume2, VolumeX, Clock, Coffee, ArrowLeft, Youtube, Search, SkipForward, SkipBack } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { User as UserType } from '../types';
 
 interface FocusRoomProps {
   currentUser: UserType;
   onExit: () => void;
+}
+
+interface YouTubeTrack {
+  id: string;
+  title: string;
+  artist: string;
+  thumbnail: string;
+  duration: string;
 }
 
 const FocusRoom = ({ currentUser, onExit }: FocusRoomProps) => {
@@ -18,28 +26,90 @@ const FocusRoom = ({ currentUser, onExit }: FocusRoomProps) => {
   const [currentTrack, setCurrentTrack] = useState(0);
   const [sessionsCompleted, setSessionsCompleted] = useState(0);
   const [sessionEnded, setSessionEnded] = useState(false);
+  const [showMusicSearch, setShowMusicSearch] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isYouTubeLoggedIn, setIsYouTubeLoggedIn] = useState(false);
+  const [customPlaylist, setCustomPlaylist] = useState<YouTubeTrack[]>([]);
   
-  const audioRef = useRef<HTMLAudioElement>(null);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const youtubePlayerRef = useRef<any>(null);
 
-  // Lofi music tracks (using royalty-free/creative commons tracks)
-  const lofiTracks = [
+  // Default lofi tracks with YouTube video IDs
+  const defaultLofiTracks: YouTubeTrack[] = [
     {
-      name: "Peaceful Study",
-      url: "https://www.soundjay.com/misc/sounds/bell-ringing-05.wav", // Placeholder - in production use actual lofi tracks
-      artist: "Lofi Cafe"
+      id: 'jfKfPfyJRdk',
+      title: 'Lofi Hip Hop Radio - Beats to Relax/Study to',
+      artist: 'Lofi Girl',
+      thumbnail: 'https://img.youtube.com/vi/jfKfPfyJRdk/mqdefault.jpg',
+      duration: 'Live Stream'
     },
     {
-      name: "Calm Focus",
-      url: "https://www.soundjay.com/misc/sounds/bell-ringing-05.wav", // Placeholder
-      artist: "Study Beats"
+      id: '4xDzrJKXOOY',
+      title: 'Synthwave Radio - Beats to Chill/Game to',
+      artist: 'Lofi Girl',
+      thumbnail: 'https://img.youtube.com/vi/4xDzrJKXOOY/mqdefault.jpg',
+      duration: 'Live Stream'
     },
     {
-      name: "Deep Work",
-      url: "https://www.soundjay.com/misc/sounds/bell-ringing-05.wav", // Placeholder
-      artist: "Focus Flow"
+      id: 'DWcJFNfaw9c',
+      title: 'Deep Focus - Music For Coding, Programming, Working',
+      artist: 'Chill Music Lab',
+      thumbnail: 'https://img.youtube.com/vi/DWcJFNfaw9c/mqdefault.jpg',
+      duration: '3:00:00'
+    },
+    {
+      id: '2gliGzb2_1I',
+      title: 'Calm Piano Music 24/7: Study Music, Focus, Think, Meditation, Relaxing Music',
+      artist: 'Yellow Brick Cinema',
+      thumbnail: 'https://img.youtube.com/vi/2gliGzb2_1I/mqdefault.jpg',
+      duration: 'Live Stream'
     }
   ];
+
+  const currentPlaylist = customPlaylist.length > 0 ? customPlaylist : defaultLofiTracks;
+
+  useEffect(() => {
+    // Load YouTube IFrame API
+    const tag = document.createElement('script');
+    tag.src = 'https://www.youtube.com/iframe_api';
+    const firstScriptTag = document.getElementsByTagName('script')[0];
+    firstScriptTag.parentNode?.insertBefore(tag, firstScriptTag);
+
+    // Initialize YouTube player when API is ready
+    (window as any).onYouTubeIframeAPIReady = () => {
+      youtubePlayerRef.current = new (window as any).YT.Player('youtube-player', {
+        height: '0',
+        width: '0',
+        videoId: currentPlaylist[currentTrack].id,
+        playerVars: {
+          autoplay: 0,
+          controls: 0,
+          disablekb: 1,
+          fs: 0,
+          iv_load_policy: 3,
+          modestbranding: 1,
+          rel: 0,
+          showinfo: 0,
+        },
+        events: {
+          onReady: (event: any) => {
+            console.log('YouTube player ready');
+          },
+          onStateChange: (event: any) => {
+            if (event.data === (window as any).YT.PlayerState.ENDED) {
+              nextTrack();
+            }
+          },
+        },
+      });
+    };
+
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+      }
+    };
+  }, []);
 
   useEffect(() => {
     if (isActive && !isBreak && !sessionEnded) {
@@ -53,8 +123,8 @@ const FocusRoom = ({ currentUser, onExit }: FocusRoomProps) => {
             setBreakTimeLeft(5 * 60);
             setSessionsCompleted(prev => prev + 1);
             setIsMusicPlaying(false);
-            if (audioRef.current) {
-              audioRef.current.pause();
+            if (youtubePlayerRef.current) {
+              youtubePlayerRef.current.pauseVideo();
             }
             // Play completion sound
             playCompletionSound();
@@ -87,7 +157,6 @@ const FocusRoom = ({ currentUser, onExit }: FocusRoomProps) => {
   }, [isActive, isBreak, sessionEnded, onExit]);
 
   const playCompletionSound = () => {
-    // Create a simple completion sound using Web Audio API
     try {
       const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
       const oscillator = audioContext.createOscillator();
@@ -120,16 +189,16 @@ const FocusRoom = ({ currentUser, onExit }: FocusRoomProps) => {
     setSessionEnded(false);
     setTimeLeft(25 * 60);
     setIsMusicPlaying(true);
-    if (audioRef.current) {
-      audioRef.current.play().catch(e => console.log('Audio play failed:', e));
+    if (youtubePlayerRef.current) {
+      youtubePlayerRef.current.playVideo();
     }
   };
 
   const pauseSession = () => {
     setIsActive(false);
     setIsMusicPlaying(false);
-    if (audioRef.current) {
-      audioRef.current.pause();
+    if (youtubePlayerRef.current) {
+      youtubePlayerRef.current.pauseVideo();
     }
   };
 
@@ -138,33 +207,90 @@ const FocusRoom = ({ currentUser, onExit }: FocusRoomProps) => {
     setTimeLeft(25 * 60);
     setSessionEnded(false);
     setIsMusicPlaying(false);
-    if (audioRef.current) {
-      audioRef.current.pause();
-      audioRef.current.currentTime = 0;
+    if (youtubePlayerRef.current) {
+      youtubePlayerRef.current.pauseVideo();
     }
   };
 
   const toggleMusic = () => {
-    if (audioRef.current) {
+    if (youtubePlayerRef.current) {
       if (isMusicPlaying) {
-        audioRef.current.pause();
+        youtubePlayerRef.current.pauseVideo();
         setIsMusicPlaying(false);
       } else {
-        audioRef.current.play().catch(e => console.log('Audio play failed:', e));
+        youtubePlayerRef.current.playVideo();
         setIsMusicPlaying(true);
       }
     }
   };
 
   const toggleMute = () => {
-    if (audioRef.current) {
-      audioRef.current.muted = !isMuted;
-      setIsMuted(!isMuted);
+    if (youtubePlayerRef.current) {
+      if (isMuted) {
+        youtubePlayerRef.current.unMute();
+        setIsMuted(false);
+      } else {
+        youtubePlayerRef.current.mute();
+        setIsMuted(true);
+      }
     }
   };
 
   const nextTrack = () => {
-    setCurrentTrack((prev) => (prev + 1) % lofiTracks.length);
+    const nextIndex = (currentTrack + 1) % currentPlaylist.length;
+    setCurrentTrack(nextIndex);
+    if (youtubePlayerRef.current) {
+      youtubePlayerRef.current.loadVideoById(currentPlaylist[nextIndex].id);
+      if (isMusicPlaying) {
+        youtubePlayerRef.current.playVideo();
+      }
+    }
+  };
+
+  const previousTrack = () => {
+    const prevIndex = currentTrack === 0 ? currentPlaylist.length - 1 : currentTrack - 1;
+    setCurrentTrack(prevIndex);
+    if (youtubePlayerRef.current) {
+      youtubePlayerRef.current.loadVideoById(currentPlaylist[prevIndex].id);
+      if (isMusicPlaying) {
+        youtubePlayerRef.current.playVideo();
+      }
+    }
+  };
+
+  const selectTrack = (index: number) => {
+    setCurrentTrack(index);
+    if (youtubePlayerRef.current) {
+      youtubePlayerRef.current.loadVideoById(currentPlaylist[index].id);
+      if (isMusicPlaying) {
+        youtubePlayerRef.current.playVideo();
+      }
+    }
+  };
+
+  const handleYouTubeLogin = () => {
+    // In a real implementation, this would integrate with YouTube's OAuth
+    alert('YouTube login would be implemented here with proper OAuth integration');
+    setIsYouTubeLoggedIn(true);
+  };
+
+  const searchYouTubeMusic = async () => {
+    // In a real implementation, this would use YouTube Data API
+    // For demo purposes, we'll simulate search results
+    const mockResults: YouTubeTrack[] = [
+      {
+        id: 'jfKfPfyJRdk',
+        title: `${searchQuery} - Lofi Mix`,
+        artist: 'Search Result',
+        thumbnail: 'https://img.youtube.com/vi/jfKfPfyJRdk/mqdefault.jpg',
+        duration: '2:30:00'
+      }
+    ];
+    
+    setCustomPlaylist(mockResults);
+    setCurrentTrack(0);
+    setShowMusicSearch(false);
+    setSearchQuery('');
   };
 
   const formatTime = (seconds: number) => {
@@ -179,6 +305,9 @@ const FocusRoom = ({ currentUser, onExit }: FocusRoomProps) => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 relative overflow-hidden">
+      {/* Hidden YouTube Player */}
+      <div id="youtube-player" style={{ display: 'none' }}></div>
+
       {/* Animated background particles */}
       <div className="absolute inset-0">
         {[...Array(20)].map((_, i) => (
@@ -213,11 +342,87 @@ const FocusRoom = ({ currentUser, onExit }: FocusRoomProps) => {
             <ArrowLeft className="h-5 w-5" />
             <span>Back to Spaces</span>
           </button>
-          <div className="text-white/80 text-sm">
-            Sessions completed: {sessionsCompleted}
+          <div className="flex items-center space-x-4">
+            <button
+              onClick={() => setShowMusicSearch(true)}
+              className="flex items-center space-x-2 bg-white/10 backdrop-blur-sm text-white px-4 py-2 rounded-lg hover:bg-white/20 transition-colors"
+            >
+              <Search className="h-4 w-4" />
+              <span>Search Music</span>
+            </button>
+            <div className="text-white/80 text-sm">
+              Sessions: {sessionsCompleted}
+            </div>
           </div>
         </div>
       </div>
+
+      {/* Music Search Modal */}
+      <AnimatePresence>
+        {showMusicSearch && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="bg-white rounded-2xl p-6 w-full max-w-md"
+            >
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-xl font-bold text-gray-800">Search YouTube Music</h3>
+                <button
+                  onClick={() => setShowMusicSearch(false)}
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  ✕
+                </button>
+              </div>
+
+              {!isYouTubeLoggedIn && (
+                <div className="mb-4 p-4 bg-red-50 rounded-lg">
+                  <p className="text-sm text-red-700 mb-2">
+                    For personalized playlists and better recommendations
+                  </p>
+                  <button
+                    onClick={handleYouTubeLogin}
+                    className="flex items-center space-x-2 bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors"
+                  >
+                    <Youtube className="h-4 w-4" />
+                    <span>Login to YouTube</span>
+                  </button>
+                </div>
+              )}
+
+              <div className="space-y-4">
+                <div className="flex space-x-2">
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="Search for lofi, study music..."
+                    className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                    onKeyPress={(e) => e.key === 'Enter' && searchYouTubeMusic()}
+                  />
+                  <button
+                    onClick={searchYouTubeMusic}
+                    className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+                  >
+                    <Search className="h-4 w-4" />
+                  </button>
+                </div>
+
+                <div className="text-xs text-gray-500">
+                  Popular searches: "lofi hip hop", "study music", "ambient focus", "piano relaxing"
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Main Content */}
       <div className="relative z-10 flex flex-col items-center justify-center min-h-[80vh] px-6">
@@ -230,7 +435,7 @@ const FocusRoom = ({ currentUser, onExit }: FocusRoomProps) => {
             Focus Room
           </h1>
           <p className="text-xl text-white/80 mb-8">
-            25-minute deep focus sessions with ad-free lofi music
+            25-minute deep focus sessions with YouTube music
           </p>
         </motion.div>
 
@@ -362,11 +567,19 @@ const FocusRoom = ({ currentUser, onExit }: FocusRoomProps) => {
           </div>
         )}
 
-        {/* Music Controls */}
+        {/* YouTube Music Player */}
         {!sessionEnded && (
-          <div className="bg-white/10 backdrop-blur-sm rounded-lg p-6 w-full max-w-md">
+          <div className="bg-white/10 backdrop-blur-sm rounded-lg p-6 w-full max-w-lg">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-white">Ad-Free Lofi Music</h3>
+              <div className="flex items-center space-x-2">
+                <Youtube className="h-5 w-5 text-red-500" />
+                <h3 className="text-lg font-semibold text-white">YouTube Music</h3>
+                {isYouTubeLoggedIn && (
+                  <span className="text-xs bg-green-500 text-white px-2 py-1 rounded-full">
+                    Logged In
+                  </span>
+                )}
+              </div>
               <div className="flex space-x-2">
                 <button
                   onClick={toggleMute}
@@ -377,52 +590,76 @@ const FocusRoom = ({ currentUser, onExit }: FocusRoomProps) => {
               </div>
             </div>
             
-            <div className="text-center mb-4">
-              <div className="text-white font-medium">{lofiTracks[currentTrack].name}</div>
-              <div className="text-white/60 text-sm">{lofiTracks[currentTrack].artist}</div>
+            {/* Current Track Display */}
+            <div className="flex items-center space-x-4 mb-4">
+              <img
+                src={currentPlaylist[currentTrack].thumbnail}
+                alt={currentPlaylist[currentTrack].title}
+                className="w-16 h-16 rounded-lg object-cover"
+              />
+              <div className="flex-1 min-w-0">
+                <div className="text-white font-medium truncate">
+                  {currentPlaylist[currentTrack].title}
+                </div>
+                <div className="text-white/60 text-sm truncate">
+                  {currentPlaylist[currentTrack].artist}
+                </div>
+                <div className="text-white/40 text-xs">
+                  {currentPlaylist[currentTrack].duration}
+                </div>
+              </div>
             </div>
 
-            <div className="flex items-center justify-center space-x-4">
+            {/* Music Controls */}
+            <div className="flex items-center justify-center space-x-4 mb-4">
               <button
-                onClick={nextTrack}
+                onClick={previousTrack}
                 className="p-2 text-white/80 hover:text-white transition-colors"
               >
-                <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M6 4l12 8-12 8V4z"/>
-                </svg>
+                <SkipBack className="h-5 w-5" />
               </button>
               <button
                 onClick={toggleMusic}
                 className="p-3 bg-white/20 rounded-full text-white hover:bg-white/30 transition-colors"
               >
-                {isMusicPlaying ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5" />}
+                {isMusicPlaying ? <Pause className="h-6 w-6" /> : <Play className="h-6 w-6" />}
               </button>
               <button
                 onClick={nextTrack}
                 className="p-2 text-white/80 hover:text-white transition-colors"
               >
-                <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M18 4v16l-12-8 12-8z"/>
-                </svg>
+                <SkipForward className="h-5 w-5" />
               </button>
+            </div>
+
+            {/* Playlist */}
+            <div className="max-h-32 overflow-y-auto">
+              <div className="text-sm text-white/60 mb-2">Playlist:</div>
+              <div className="space-y-1">
+                {currentPlaylist.map((track, index) => (
+                  <button
+                    key={track.id}
+                    onClick={() => selectTrack(index)}
+                    className={`w-full text-left p-2 rounded text-sm transition-colors ${
+                      index === currentTrack
+                        ? 'bg-white/20 text-white'
+                        : 'text-white/70 hover:bg-white/10 hover:text-white'
+                    }`}
+                  >
+                    <div className="truncate">{track.title}</div>
+                    <div className="text-xs opacity-60 truncate">{track.artist}</div>
+                  </button>
+                ))}
+              </div>
             </div>
             
             <div className="mt-4 text-center">
               <div className="text-xs text-white/60">
-                🎵 Enjoy uninterrupted focus music
+                🎵 Powered by YouTube Music
               </div>
             </div>
           </div>
         )}
-
-        {/* Hidden audio element */}
-        <audio
-          ref={audioRef}
-          src={lofiTracks[currentTrack].url}
-          loop
-          preload="auto"
-          onEnded={nextTrack}
-        />
       </div>
 
       {/* Stats */}
