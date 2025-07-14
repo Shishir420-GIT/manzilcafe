@@ -29,12 +29,9 @@ function App() {
 
   const checkUser = async () => {
     try {
-      console.log('Checking user session...');
       const { data: { session } } = await supabase.auth.getSession();
-      console.log('Session:', session);
       
       if (session?.user) {
-        console.log('User found in session:', session.user.email);
         const { data: userData, error } = await supabase
           .from('users')
           .select('*')
@@ -42,7 +39,6 @@ function App() {
           .single();
         
         if (error && error.code === 'PGRST116') {
-          console.log('Creating new user profile...');
           // User exists in auth but not in public.users table, create profile
           const newUser = {
             id: session.user.id,
@@ -61,15 +57,11 @@ function App() {
           if (insertError) {
             console.error('Error creating user profile:', insertError);
           } else {
-            console.log('User profile created:', createdUser);
             setUser(createdUser);
           }
         } else if (!error && userData) {
-          console.log('User profile found:', userData);
           setUser(userData);
         }
-      } else {
-        console.log('No user session found');
       }
     } catch (error) {
       console.error('Error checking user:', error);
@@ -105,23 +97,19 @@ function App() {
   useEffect(() => {
     const initializeApp = async () => {
       try {
-        console.log('Initializing app...');
         
         // Test Supabase connection
         try {
-          const { data, error } = await supabase.from('users').select('count').limit(1);
-          console.log('Supabase connection test:', { data, error });
+          await supabase.from('users').select('count').limit(1);
         } catch (testError) {
           console.error('Supabase connection failed:', testError);
         }
         
         await checkUser();
         await fetchCafes();
-        console.log('App initialization complete');
       } catch (error) {
         console.error('Error initializing app:', error);
       } finally {
-        console.log('Setting loading to false');
         setLoading(false);
       }
     };
@@ -177,7 +165,6 @@ function App() {
   useEffect(() => {
     const timeout = setTimeout(() => {
       if (loading) {
-        console.log('Loading timeout reached, forcing loading to false');
         setLoading(false);
       }
     }, 10000); // 10 second timeout

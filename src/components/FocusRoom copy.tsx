@@ -1,7 +1,16 @@
 import { useState, useEffect, useRef } from 'react';
-import { Play, Pause, SkipForward, SkipBack } from 'lucide-react';
-import StarryBackground from './shared/StarryBackground';
+import { Play, Pause } from 'lucide-react';
+import { User as UserType } from '../types';
 
+// Add this at the top of the file to fix the linter error for window.YT
+declare global {
+  interface Window {
+    YT: any;
+    onYouTubeIframeAPIReady: () => void;
+  }
+}
+
+// No props needed for FocusRoom
 interface YouTubeTrack {
   id: string;
   title: string;
@@ -41,9 +50,14 @@ const FocusRoom = () => {
 
   // YouTube player state
   const [currentTrack, setCurrentTrack] = useState(0);
+  const [isPlayerReady, setIsPlayerReady] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [playerLoading, setPlayerLoading] = useState(true);
+  const [duration, setDuration] = useState(0);
+  const [currentTime, setCurrentTime] = useState(0);
+  const playerRef = useRef<any>(null);
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const timerIntervalRef = useRef<NodeJS.Timeout | null>(null);
-  const iframeRef = useRef<HTMLIFrameElement>(null);
 
   // Pomodoro timer logic
   useEffect(() => {
@@ -55,7 +69,7 @@ const FocusRoom = () => {
             setIsBreak(true);
             setBreakTimeLeft(5 * 60);
             setSessionsCompleted((s) => s + 1);
-            setIsPlaying(false);
+            if (playerRef.current && isPlayerReady) playerRef.current.pauseVideo();
             playCompletionSound();
             return 25 * 60;
           }
@@ -76,7 +90,7 @@ const FocusRoom = () => {
     return () => {
       if (timerIntervalRef.current) clearInterval(timerIntervalRef.current);
     };
-  }, [isActive, isBreak]);
+  }, [isActive, isBreak, isPlayerReady]);
 
   // Play chime sound at end of session
   const playCompletionSound = () => {
@@ -93,39 +107,96 @@ const FocusRoom = () => {
       gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
       oscillator.start(audioContext.currentTime);
       oscillator.stop(audioContext.currentTime + 0.3);
-    } catch (error) {
-      console.log('Audio context not available');
-    }
+    } catch {}
   };
 
-  // Handle play/pause
+  // Load YouTube IFrame API and create player
+  useEffect(() => {
+    let scriptTag: HTMLScriptElement | null = null;
+    setPlayerLoading(true);
+    if (!window.YT) {
+      scriptTag = document.createElement('script');
+      scriptTag.src = 'https://www.youtube.com/iframe_api';
+      document.body.appendChild(scriptTag);
+    }
+    window.onYouTubeIframeAPIReady = () => {
+      if (playerRef.current) playerRef.current.destroy();
+      playerRef.current = new window.YT.Player('youtube-player', {
+        height: '0',
+        width: '0',
+        videoId: curatedTracks[currentTrack].id,
+        playerVars: {
+          autoplay: 0,
+          controls: 0,
+          modestbranding: 1,
+          rel: 0,
+          showinfo: 0,
+        },
+        events: {
+          onReady: (event: any) => {
+            setIsPlayerReady(true);
+            setPlayerLoading(false);
+            setDuration(event.target.getDuration());
+            setCurrentTime(event.target.getCurrentTime());
+          },
+          onStateChange: (event: any) => {
+            if (event.data === 1) setIsPlaying(true); // playing
+            if (event.data === 2) setIsPlaying(false); // paused
+            if (event.data === 0) setIsPlaying(false); // ended
+          },
+        },
+      });
+    };
+    return () => {
+      if (playerRef.current) playerRef.current.destroy();
+      if (scriptTag) document.body.removeChild(scriptTag);
+    };
+    // eslint-disable-next-line
+  }, []);
+
+  // Update duration and currentTime
+  useEffect(() => {
+    if (isPlayerReady && playerRef.current) {
+      setDuration(playerRef.current.getDuration());
+      setCurrentTime(playerRef.current.getCurrentTime());
+      if (intervalRef.current) clearInterval(intervalRef.current);
+      intervalRef.current = setInterval(() => {
+        if (playerRef.current && isPlaying) {
+          setCurrentTime(playerRef.current.getCurrentTime());
+        }
+      }, 500);
+    }
+    return () => {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+    };
+  }, [isPlayerReady, isPlaying]);
+
+  // Change track when currentTrack changes
+  useEffect(() => {
+    if (playerRef.current && isPlayerReady) {
+      playerRef.current.loadVideoById(curatedTracks[currentTrack].id);
+      setIsPlaying(false);
+      setDuration(playerRef.current.getDuration());
+      setCurrentTime(0);
+    }
+    // eslint-disable-next-line
+  }, [currentTrack, isPlayerReady]);
+
+  // Player controls
   const handlePlayPause = () => {
-    if (iframeRef.current) {
-      const iframe = iframeRef.current;
-      if (isPlaying) {
-        // Reload iframe to stop (simple approach)
-        const currentSrc = iframe.src;
-        iframe.src = currentSrc.replace('&autoplay=1', '&autoplay=0');
-        setIsPlaying(false);
-      } else {
-        // Start playing
-        const currentSrc = iframe.src;
-        iframe.src = currentSrc.replace('&autoplay=0', '&autoplay=1');
-        setIsPlaying(true);
-      }
+    if (!isPlayerReady || !playerRef.current) return;
+    if (isPlaying) {
+      playerRef.current.pauseVideo();
+    } else {
+      playerRef.current.playVideo();
     }
   };
 
-  // Handle track change
-  const handleTrackChange = (direction: 'next' | 'prev') => {
-    let newTrack;
-    if (direction === 'next') {
-      newTrack = (currentTrack + 1) % curatedTracks.length;
-    } else {
-      newTrack = currentTrack === 0 ? curatedTracks.length - 1 : currentTrack - 1;
-    }
-    setCurrentTrack(newTrack);
-    setIsPlaying(false); // Reset play state when changing tracks
+  const handleSeek = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!isPlayerReady || !playerRef.current) return;
+    const seekTo = parseFloat(e.target.value);
+    playerRef.current.seekTo(seekTo, true);
+    setCurrentTime(seekTo);
   };
 
   const formatTime = (seconds: number) => {
@@ -138,15 +209,8 @@ const FocusRoom = () => {
   // Get YouTube thumbnail
   const getThumbnail = (id: string) => `https://i.ytimg.com/vi/${id}/hqdefault.jpg`;
 
-  // Get YouTube embed URL
-  const getEmbedUrl = (id: string) => {
-    const autoplay = isPlaying ? '1' : '0';
-    return `https://www.youtube.com/embed/${id}?autoplay=${autoplay}&controls=0&modestbranding=1&rel=0&showinfo=0&loop=1&playlist=${id}`;
-  };
-
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 relative">
-      <StarryBackground />
+    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900">
       {/* Timer UI above the card */}
       <div className="mb-8 flex flex-col items-center">
         <div className="w-64 h-64 rounded-full border-8 border-white/20 flex items-center justify-center relative mb-4">
@@ -170,14 +234,9 @@ const FocusRoom = () => {
                 setIsActive(true);
                 setIsBreak(false);
                 setTimeLeft(25 * 60);
-                // Auto-start music when focus session begins
-                if (iframeRef.current) {
-                  const iframe = iframeRef.current;
-                  iframe.src = getEmbedUrl(curatedTracks[currentTrack].id).replace('&autoplay=0', '&autoplay=1');
-                  setIsPlaying(true);
-                }
+                if (isPlayerReady && playerRef.current) playerRef.current.playVideo();
               }}
-              disabled={isBreak && breakTimeLeft > 0}
+              disabled={isBreak && breakTimeLeft > 0 || !isPlayerReady}
               className="flex items-center space-x-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white px-8 py-4 rounded-full font-semibold hover:from-purple-700 hover:to-pink-700 transition-all transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Play className="h-5 w-5" />
@@ -186,14 +245,7 @@ const FocusRoom = () => {
           ) : (
             <div className="flex space-x-4">
               <button
-                onClick={() => {
-                  setIsActive(false);
-                  setIsPlaying(false);
-                  if (iframeRef.current) {
-                    const iframe = iframeRef.current;
-                    iframe.src = getEmbedUrl(curatedTracks[currentTrack].id).replace('&autoplay=1', '&autoplay=0');
-                  }
-                }}
+                onClick={() => setIsActive(false)}
                 className="flex items-center space-x-2 bg-yellow-600 text-white px-6 py-3 rounded-full font-semibold hover:bg-yellow-700 transition-all"
               >
                 <Pause className="h-5 w-5" />
@@ -206,23 +258,12 @@ const FocusRoom = () => {
           Sessions completed: {sessionsCompleted}
         </div>
       </div>
-      
       {/* YouTube Card UI */}
       <div className="relative w-full max-w-xs sm:max-w-sm md:max-w-md bg-white rounded-3xl shadow-2xl p-6 flex flex-col items-center">
         {/* Hidden YouTube Player */}
         <div style={{ position: 'absolute', left: '-9999px', width: 0, height: 0 }}>
-          <iframe
-            ref={iframeRef}
-            src={getEmbedUrl(curatedTracks[currentTrack].id)}
-            width="0"
-            height="0"
-            frameBorder="0"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-            allowFullScreen
-            title="YouTube Player"
-          />
+          <div id="youtube-player" />
         </div>
-        
         {/* Card Content */}
         <div className="w-full flex flex-col items-center">
           {/* Thumbnail */}
@@ -233,66 +274,42 @@ const FocusRoom = () => {
               className="w-full h-full object-cover"
             />
           </div>
-          
           {/* Title & Artist */}
           <div className="text-center mb-4">
-            <div className="font-bold text-lg text-gray-900 line-clamp-2">
+            <div className="font-bold text-lg text-gray-900">
               {curatedTracks[currentTrack].title}
             </div>
             <div className="text-gray-500 text-sm">
               {curatedTracks[currentTrack].artist}
             </div>
           </div>
-          
-          {/* Track indicator */}
-          <div className="flex items-center space-x-2 mb-4">
-            {curatedTracks.map((_, index) => (
-              <div
-                key={index}
-                className={`w-2 h-2 rounded-full ${
-                  index === currentTrack ? 'bg-pink-600' : 'bg-gray-300'
-                }`}
-              />
-            ))}
+          {/* Progress Bar */}
+          <div className="w-full flex flex-col items-center mb-4">
+            <input
+              type="range"
+              min={0}
+              max={duration}
+              step={0.1}
+              value={currentTime}
+              onChange={handleSeek}
+              className="w-full accent-pink-600 h-2 rounded-lg appearance-none bg-gray-200"
+              disabled={!isPlayerReady}
+            />
+            <div className="flex justify-between w-full text-xs text-gray-400 mt-1">
+              <span>{formatTime(currentTime)}</span>
+              <span>{formatTime(duration)}</span>
+            </div>
           </div>
-          
           {/* Controls */}
-          <div className="flex items-center justify-center space-x-4 w-full">
-            <button
-              onClick={() => handleTrackChange('prev')}
-              className="p-3 bg-gray-100 rounded-full shadow-md text-gray-600 hover:bg-gray-200 transition-all"
-            >
-              <SkipBack className="h-5 w-5" />
-            </button>
-            
+          <div className="flex items-center justify-center w-full">
             <button
               onClick={handlePlayPause}
-              className="p-4 bg-pink-600 rounded-full shadow-lg text-white hover:bg-pink-700 transition-all"
+              disabled={!isPlayerReady}
+              className="p-4 bg-pink-600 rounded-full shadow-lg text-white hover:bg-pink-700 transition-all disabled:opacity-50"
             >
               {isPlaying ? <Pause className="h-7 w-7" /> : <Play className="h-7 w-7" />}
             </button>
-            
-            <button
-              onClick={() => handleTrackChange('next')}
-              className="p-3 bg-gray-100 rounded-full shadow-md text-gray-600 hover:bg-gray-200 transition-all"
-            >
-              <SkipForward className="h-5 w-5" />
-            </button>
           </div>
-          
-          {/* Playing status */}
-          {isPlaying && (
-            <div className="mt-4 text-center">
-              <div className="text-pink-600 text-sm font-medium">Now Playing</div>
-              <div className="flex items-center justify-center space-x-1 mt-1">
-                <div className="w-1 h-3 bg-pink-600 rounded-full animate-pulse"></div>
-                <div className="w-1 h-4 bg-pink-600 rounded-full animate-pulse" style={{ animationDelay: '0.1s' }}></div>
-                <div className="w-1 h-2 bg-pink-600 rounded-full animate-pulse" style={{ animationDelay: '0.2s' }}></div>
-                <div className="w-1 h-4 bg-pink-600 rounded-full animate-pulse" style={{ animationDelay: '0.3s' }}></div>
-                <div className="w-1 h-3 bg-pink-600 rounded-full animate-pulse" style={{ animationDelay: '0.4s' }}></div>
-              </div>
-            </div>
-          )}
         </div>
       </div>
     </div>
