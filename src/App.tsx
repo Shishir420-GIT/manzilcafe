@@ -243,7 +243,7 @@ function App() {
                 </div>
                 <div>
                   <h1 className="text-xl font-bold text-text-inverse">Manziil Café</h1>
-                  <p className="text-xs text-text-inverse/80">Your virtual social space experience</p>
+                  <p className="text-xs text-text-inverse/80">Your virtual social Cafe experience</p>
                 </div>
               </div>
 
@@ -437,7 +437,7 @@ function App() {
                   onClick={() => setShowAuthModal(true)}
                   className="bg-gradient-to-r from-orange-accent to-golden-accent text-text-inverse px-8 py-4 rounded-xl font-semibold text-lg hover:from-orange-accent/90 hover:to-golden-accent/90 transition-all transform hover:scale-105 shadow-lg"
                 >
-                  Start Your Space Journey
+                  Start Your VirtualCafe Journey
                 </button>
               </motion.div>
             </div>

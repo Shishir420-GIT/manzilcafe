@@ -268,6 +268,7 @@ export const secureAIRequest = async (
   // Step 1: Input validation and sanitization with monitoring
   const inputCheck = sanitizeAndValidateInput(userMessage, userId);
   if (!inputCheck.isSafe) {
+    console.warn('AI input blocked:', inputCheck.reason);
     return `I'm sorry, but I can only help with cafe-related topics. ${inputCheck.reason}`;
   }
   
@@ -281,6 +282,7 @@ export const secureAIRequest = async (
     // Step 4: Validate and sanitize response
     const responseCheck = validateAndSanitizeResponse(rawResponse);
     if (!responseCheck.isSafe) {
+      console.warn('AI response blocked:', responseCheck.reason);
       if (userId) {
         monitorAIRequest(userId, userMessage, true, 'Response validation failed', 'malicious_input');
       }

@@ -12,6 +12,7 @@ const VoiceRecorder = ({ onSendVoiceMessage, onCancel }: VoiceRecorderProps) => 
   const [duration, setDuration] = useState(0);
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
+  const [playerError, setPlayerError] = useState<string | null>(null); // <-- Add state
   
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
@@ -28,7 +29,20 @@ const VoiceRecorder = ({ onSendVoiceMessage, onCancel }: VoiceRecorderProps) => 
     };
   }, [audioUrl]);
 
+  // Add error handling for audio playback
+  useEffect(() => {
+    if (!audioUrl) return;
+    const audio = document.createElement('audio');
+    audio.src = audioUrl;
+    const onError = () => setPlayerError('Audio playback failed. Please try again.');
+    audio.addEventListener('error', onError);
+    return () => {
+      audio.removeEventListener('error', onError);
+    };
+  }, [audioUrl]);
+
   const startRecording = async () => {
+    setPlayerError(null);
     try {
       // Check if browser supports media devices
       if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
@@ -108,6 +122,7 @@ const VoiceRecorder = ({ onSendVoiceMessage, onCancel }: VoiceRecorderProps) => 
   };
 
   const handleCancel = () => {
+    setPlayerError(null);
     if (isRecording) {
       stopRecording();
     }

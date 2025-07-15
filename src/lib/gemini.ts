@@ -17,6 +17,7 @@ const generateRawAIResponse = async (prompt: string): Promise<string> => {
   const model = genAI.getGenerativeModel({ model: 'gemma-3n-e2b-it' });
   const result = await model.generateContent(prompt);
   const response = await result.response;
+  // console.log('Gemini raw response:', response.text());
   return response.text();
 };
 
