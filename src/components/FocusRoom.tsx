@@ -101,6 +101,7 @@ const FocusRoom = () => {
     const initializeYouTubeAPI = () => {
       // Check if API is already loaded
       if (window.YT && window.YT.Player) {
+        console.log('YouTube API already loaded');
         setApiLoaded(true);
         createPlayer();
         return;
@@ -108,9 +109,11 @@ const FocusRoom = () => {
 
       // Check if script is already loading
       if (document.querySelector('script[src*="youtube.com/iframe_api"]')) {
+        console.log('YouTube API script already loading, waiting...');
         // Script is loading, wait for it
         const checkAPI = setInterval(() => {
           if (window.YT && window.YT.Player) {
+            console.log('YouTube API loaded after waiting');
             clearInterval(checkAPI);
             setApiLoaded(true);
             createPlayer();
@@ -119,6 +122,7 @@ const FocusRoom = () => {
         return;
       }
 
+      console.log('Loading YouTube IFrame API...');
       // Load YouTube IFrame API
       const tag = document.createElement('script');
       tag.src = 'https://www.youtube.com/iframe_api';
@@ -128,6 +132,7 @@ const FocusRoom = () => {
 
       // Set up the callback
       window.onYouTubeIframeAPIReady = () => {
+        console.log('YouTube API ready callback triggered');
         setApiLoaded(true);
         createPlayer();
       };
@@ -135,6 +140,7 @@ const FocusRoom = () => {
 
     const createPlayer = () => {
       try {
+        console.log('Creating YouTube player...');
         // Destroy existing player
         if (playerRef.current) {
           playerRef.current.destroy();
@@ -190,6 +196,7 @@ const FocusRoom = () => {
             },
             onError: (event: any) => {
               console.error('YouTube player error:', event.data);
+              setPlayerError(`YouTube Error: ${event.data}`);
               const errorMessages: { [key: number]: string } = {
                 2: 'Invalid video ID',
                 5: 'HTML5 player error',
