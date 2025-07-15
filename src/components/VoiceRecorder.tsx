@@ -232,6 +232,11 @@ const VoiceRecorder = ({ onSendVoiceMessage, onCancel }: VoiceRecorderProps) => 
             <span className="text-xs text-red-600">Recording in progress...</span>
           </div>
         )}
+        {playerError && (
+          <div className="text-error text-xs text-center mb-2 p-2 bg-error/10 rounded">
+            {playerError}
+          </div>
+        )}
       </motion.div>
     </AnimatePresence>
   );

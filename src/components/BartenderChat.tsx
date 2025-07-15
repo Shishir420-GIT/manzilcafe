@@ -233,10 +233,10 @@ const BartenderChat = ({ currentUser, onClose }: BartenderChatProps) => {
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         exit={{ opacity: 0, scale: 0.95 }}
-        className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl h-[80vh] flex flex-col overflow-hidden"
+        className="bg-warm-white rounded-2xl shadow-2xl w-full max-w-2xl h-[80vh] flex flex-col overflow-hidden"
       >
         {/* Header */}
-        <div className="bg-gradient-to-r from-amber-600 to-yellow-500 p-4 text-white">
+        <div className="bg-gradient-to-r from-coffee-dark to-coffee-medium p-4 text-text-inverse">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
               <button
@@ -248,8 +248,8 @@ const BartenderChat = ({ currentUser, onClose }: BartenderChatProps) => {
               <div className="flex items-center space-x-2">
                 <Bot className="h-6 w-6" />
                 <div>
-                  <h2 className="text-lg font-bold">AI Bartender</h2>
-                  <p className="text-sm opacity-90">Your personal virtual bartender</p>
+                  <h2 className="text-lg font-bold text-text-inverse">AI Bartender</h2>
+                  <p className="text-sm text-text-inverse/90">Your personal virtual bartender</p>
                 </div>
               </div>
             </div>
@@ -263,7 +263,7 @@ const BartenderChat = ({ currentUser, onClose }: BartenderChatProps) => {
         </div>
 
         {/* Messages */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50">
+        <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-cream-primary/30">
           <AnimatePresence>
             {messages.map((message) => (
               <motion.div
@@ -278,13 +278,13 @@ const BartenderChat = ({ currentUser, onClose }: BartenderChatProps) => {
                 <div className="flex-shrink-0">
                   <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
                     message.sender === 'ai' 
-                      ? 'bg-amber-100' 
-                      : 'bg-blue-100'
+                      ? 'bg-golden-accent/20' 
+                      : 'bg-orange-accent/20'
                   }`}>
                     {message.sender === 'ai' ? (
-                      <Bot className="h-4 w-4 text-amber-600" />
+                      <Bot className="h-4 w-4 text-golden-accent" />
                     ) : (
-                      <User className="h-4 w-4 text-blue-600" />
+                      <User className="h-4 w-4 text-orange-accent" />
                     )}
                   </div>
                 </div>
@@ -293,26 +293,26 @@ const BartenderChat = ({ currentUser, onClose }: BartenderChatProps) => {
                   message.sender === 'user' ? 'text-right' : ''
                 }`}>
                   <div className="flex items-center space-x-2 mb-1">
-                    <span className="text-xs font-medium text-gray-600">
+                    <span className="text-xs font-medium text-text-secondary">
                       {message.sender === 'ai' ? 'AI Bartender' : currentUser.name}
                     </span>
-                    <span className="text-xs text-gray-400">
+                    <span className="text-xs text-text-muted">
                       {formatTime(message.timestamp)}
                     </span>
                   </div>
                   
                   <div className={`px-4 py-2 rounded-lg ${
                     message.sender === 'user'
-                      ? 'bg-blue-500 text-white'
+                      ? 'bg-orange-accent text-text-inverse'
                       : message.message_type === 'voice'
-                      ? 'bg-green-50 text-green-900 border border-green-200'
-                      : 'bg-white text-gray-800 border border-gray-200'
+                    ? 'bg-success/10 text-success border border-success/30'
+                      : 'bg-warm-white text-text-primary border border-cream-tertiary'
                   }`}>
                     {message.message_type === 'voice' && message.audio_data ? (
                       <div className="flex items-center space-x-2">
                         <button
                           onClick={() => toggleAudioPlayback(message.id, message.audio_data!)}
-                          className="p-1 rounded-full hover:bg-green-200 transition-colors"
+                          className="p-1 rounded-full hover:bg-success/20 transition-colors"
                         >
                           {playingAudio === message.id ? (
                             <Pause className="h-4 w-4" />
@@ -339,22 +339,22 @@ const BartenderChat = ({ currentUser, onClose }: BartenderChatProps) => {
               className="flex items-start space-x-3"
             >
               <div className="flex-shrink-0">
-                <div className="w-8 h-8 bg-amber-100 rounded-full flex items-center justify-center">
-                  <Bot className="h-4 w-4 text-amber-600" />
+                <div className="w-8 h-8 bg-golden-accent/20 rounded-full flex items-center justify-center">
+                  <Bot className="h-4 w-4 text-golden-accent" />
                 </div>
               </div>
               <div className="flex-1 max-w-xs lg:max-w-md">
                 <div className="flex items-center space-x-2 mb-1">
-                  <span className="text-xs font-medium text-gray-600">AI Bartender</span>
+                  <span className="text-xs font-medium text-text-secondary">AI Bartender</span>
                 </div>
-                <div className="bg-white border border-gray-200 rounded-lg px-4 py-2">
+                <div className="bg-warm-white border border-cream-tertiary rounded-lg px-4 py-2">
                   <div className="flex items-center space-x-2">
                     <div className="flex space-x-1">
-                      <div className="w-2 h-2 bg-amber-500 rounded-full animate-bounce"></div>
-                      <div className="w-2 h-2 bg-amber-500 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                      <div className="w-2 h-2 bg-amber-500 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                      <div className="w-2 h-2 bg-golden-accent rounded-full animate-bounce"></div>
+                      <div className="w-2 h-2 bg-golden-accent rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                      <div className="w-2 h-2 bg-golden-accent rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
                     </div>
-                    <span className="text-sm text-gray-500">Thinking...</span>
+                    <span className="text-sm text-text-muted">Thinking...</span>
                   </div>
                 </div>
               </div>
@@ -366,13 +366,13 @@ const BartenderChat = ({ currentUser, onClose }: BartenderChatProps) => {
 
         {/* Quick Responses */}
         {messages.length === 1 && (
-          <div className="border-t border-gray-200 p-4 bg-gray-50">
+          <div className="border-t border-cream-tertiary p-4 bg-cream-primary/30">
             <div className="flex flex-wrap gap-2">
               {quickResponses.map((response, index) => (
                 <button
                   key={index}
                   onClick={() => sendQuickResponse(response)}
-                  className="px-3 py-1 bg-white border border-gray-300 rounded-full text-xs text-gray-700 hover:bg-gray-50 transition-colors"
+                  className="px-3 py-1 bg-warm-white border border-cream-tertiary rounded-full text-xs text-text-secondary hover:bg-cream-secondary transition-colors"
                 >
                   {response}
                 </button>
@@ -382,7 +382,7 @@ const BartenderChat = ({ currentUser, onClose }: BartenderChatProps) => {
         )}
 
         {/* Message Input */}
-        <div className="border-t border-gray-200 p-4 bg-white">
+        <div className="border-t border-cream-tertiary p-4 bg-warm-white">
           {showVoiceRecorder && (
             <div className="mb-4">
               <VoiceRecorder
@@ -398,14 +398,14 @@ const BartenderChat = ({ currentUser, onClose }: BartenderChatProps) => {
               value={newMessage}
               onChange={(e) => setNewMessage(e.target.value)}
               placeholder="Ask me anything... (drinks, recommendations, chat)"
-              className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all"
+              className="flex-1 px-4 py-2 border border-cream-tertiary rounded-lg focus:ring-2 focus:ring-orange-accent focus:border-transparent transition-all bg-cream-primary"
               disabled={loading}
             />
             <button
               type="button"
               onClick={() => setShowVoiceRecorder(!showVoiceRecorder)}
               className={`px-4 py-2 rounded-lg transition-colors ${
-                showVoiceRecorder ? 'bg-red-600 text-white' : 'bg-gray-200 text-gray-600 hover:bg-gray-300'
+                showVoiceRecorder ? 'bg-red-600 text-text-inverse' : 'bg-cream-secondary text-text-secondary hover:bg-cream-tertiary'
               }`}
             >
               <Mic className="h-4 w-4" />
@@ -413,12 +413,12 @@ const BartenderChat = ({ currentUser, onClose }: BartenderChatProps) => {
             <button
               type="submit"
               disabled={loading || !newMessage.trim()}
-              className="px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-4 py-2 bg-orange-accent text-text-inverse rounded-lg hover:bg-orange-accent/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Send className="h-4 w-4" />
             </button>
           </form>
-          <p className="text-xs text-gray-500 mt-2">
+          <p className="text-xs text-text-muted mt-2">
             Tip: Use the mic button for voice messages, or type to chat with your AI bartender
           </p>
         </div>
@@ -427,4 +427,4 @@ const BartenderChat = ({ currentUser, onClose }: BartenderChatProps) => {
   );
 };
 
-export default BartenderChat; 
+export default BartenderChat;

@@ -78,9 +78,9 @@ const UserProfile = ({ user, onUpdate, onClose }: UserProfileProps) => {
 
   const getRoleColor = (role: string) => {
     switch (role) {
-      case 'host': return 'bg-purple-100 text-purple-800';
-      case 'moderator': return 'bg-blue-100 text-blue-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case 'host': return 'bg-orange-accent/20 text-orange-accent';
+      case 'moderator': return 'bg-info/20 text-info';
+      default: return 'bg-cream-secondary text-text-secondary';
     }
   };
 

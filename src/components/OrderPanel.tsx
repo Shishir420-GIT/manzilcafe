@@ -142,7 +142,7 @@ const OrderPanel = ({ cafeId, userId }: OrderPanelProps) => {
                     <button
                       onClick={() => placeOrder(item)}
                       disabled={loading === item.id}
-                      className="flex items-center space-x-1 px-2 py-1 bg-orange-accent text-text-inverse rounded text-xs hover:bg-orange-accent/90 transition-colors disabled:opacity-50"
+                      className="flex items-center space-x-1 px-3 py-1 bg-orange-accent text-text-inverse rounded-full text-xs hover:bg-orange-accent/90 transition-colors disabled:opacity-50 shadow-sm"
                     >
                       {loading === item.id ? (
                         <div className="w-3 h-3 border border-text-inverse border-t-transparent rounded-full animate-spin" />
@@ -193,7 +193,7 @@ const OrderPanel = ({ cafeId, userId }: OrderPanelProps) => {
                 </div>
                 <div className="flex-shrink-0">
                   {order.status === 'completed' ? (
-                    <Check className="h-4 w-4 text-green-500" />
+                    <Check className="h-4 w-4 text-success" />
                   ) : (
                     <div className="w-2 h-2 bg-golden-accent rounded-full animate-pulse" />
                   )}

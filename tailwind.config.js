@@ -33,6 +33,11 @@ export default {
           muted: '#8D6E63',
           inverse: '#FFFFFF',
         },
+        // Status Colors
+        success: '#8BC34A',
+        error: '#F44336',
+        warning: '#FF9800',
+        info: '#2196F3',
       },
     },
   },

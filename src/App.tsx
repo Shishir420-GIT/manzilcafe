@@ -234,7 +234,7 @@ function App() {
       <CursorTrail />
       <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50">
         {/* Header */}
-        <header className="bg-coffee-dark/95 backdrop-blur-sm shadow-sm border-b border-coffee-medium/50 sticky top-0 z-40">
+        <header className="bg-coffee-dark backdrop-blur-sm shadow-sm border-b border-coffee-medium/50 sticky top-0 z-40">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex items-center justify-between h-16">
               <div className="flex items-center space-x-3">
@@ -302,7 +302,7 @@ function App() {
         </header>
 
         {/* Main Content */}
-        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 bg-warm-white min-h-screen">
+        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 min-h-screen">
           {user ? (
             <>
               {/* Actions Bar */}
@@ -372,7 +372,7 @@ function App() {
             </>
           ) : (
             /* Welcome Section */
-            <div className="text-center py-20">
+            <div className="text-center py-20 bg-warm-white rounded-2xl shadow-lg mx-4">
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}

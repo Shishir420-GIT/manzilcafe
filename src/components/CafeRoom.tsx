@@ -124,44 +124,44 @@ const CafeRoom = ({ cafe, currentUser, onLeave }: CafeRoomProps) => {
   };
 
   return (
-    <div className="h-screen flex flex-col bg-gray-50">
+    <div className="h-screen flex flex-col bg-warm-white">
       {/* Header */}
-      <div className="bg-white shadow-sm border-b border-gray-200 p-4">
+      <div className="bg-cream-primary shadow-sm border-b border-cream-tertiary p-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
             <button
               onClick={onLeave}
-              className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+              className="p-2 hover:bg-cream-secondary rounded-full transition-colors"
             >
-              <ArrowLeft className="h-5 w-5 text-gray-600" />
+              <ArrowLeft className="h-5 w-5 text-text-secondary" />
             </button>
             <div>
-              <h1 className="text-xl font-bold text-gray-800">{cafe.name}</h1>
-              <p className="text-sm text-gray-600">{cafe.description}</p>
+              <h1 className="text-xl font-bold text-text-primary">{cafe.name}</h1>
+              <p className="text-sm text-text-secondary">{cafe.description}</p>
             </div>
           </div>
           
           <div className="flex items-center space-x-4">
-            <div className="flex items-center space-x-2 text-sm text-gray-600">
+            <div className="flex items-center space-x-2 text-sm text-text-secondary">
               <Users className="h-4 w-4" />
               <span>{members.length} online</span>
             </div>
             {cafe.host_id === currentUser.id && (
-              <button className="p-2 hover:bg-gray-100 rounded-full transition-colors">
-                <Settings className="h-5 w-5 text-gray-600" />
+              <button className="p-2 hover:bg-cream-secondary rounded-full transition-colors">
+                <Settings className="h-5 w-5 text-text-secondary" />
               </button>
             )}
           </div>
         </div>
 
         {/* Tab Navigation */}
-        <div className="flex space-x-1 mt-4 bg-gray-100 rounded-lg p-1">
+        <div className="flex space-x-1 mt-4 bg-cream-secondary rounded-lg p-1">
           <button
             onClick={() => setActiveTab('chat')}
             className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all ${
               activeTab === 'chat'
-                ? 'bg-white text-gray-800 shadow-sm'
-                : 'text-gray-600 hover:text-gray-800'
+                ? 'bg-warm-white text-text-primary shadow-sm'
+                : 'text-text-secondary hover:text-text-primary'
             }`}
           >
             Chat
@@ -170,8 +170,8 @@ const CafeRoom = ({ cafe, currentUser, onLeave }: CafeRoomProps) => {
             onClick={() => setActiveTab('orders')}
             className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all ${
               activeTab === 'orders'
-                ? 'bg-white text-gray-800 shadow-sm'
-                : 'text-gray-600 hover:text-gray-800'
+                ? 'bg-warm-white text-text-primary shadow-sm'
+                : 'text-text-secondary hover:text-text-primary'
             }`}
           >
             Menu & Orders
@@ -191,25 +191,25 @@ const CafeRoom = ({ cafe, currentUser, onLeave }: CafeRoomProps) => {
         </div>
 
         {/* Members Sidebar */}
-        <div className="w-64 bg-white border-l border-gray-200 p-4 hidden lg:block">
-          <h3 className="text-sm font-medium text-gray-700 mb-3">
+        <div className="w-64 bg-cream-primary border-l border-cream-tertiary p-4 hidden lg:block">
+          <h3 className="text-sm font-medium text-text-secondary mb-3">
             Members ({members.length})
           </h3>
           <div className="space-y-2">
             {members.map((member) => (
               <div
                 key={member.id}
-                className="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-50"
+                className="flex items-center space-x-3 p-2 rounded-lg hover:bg-cream-secondary"
               >
-                <div className="w-8 h-8 bg-gradient-to-br from-amber-400 to-amber-600 rounded-full flex items-center justify-center text-white text-sm font-medium">
+                <div className="w-8 h-8 bg-gradient-to-br from-orange-accent to-golden-accent rounded-full flex items-center justify-center text-text-inverse text-sm font-medium">
                   {member.user?.name?.charAt(0).toUpperCase() || '?'}
                 </div>
                 <div className="flex-1">
-                  <p className="text-sm font-medium text-gray-800">
+                  <p className="text-sm font-medium text-text-primary">
                     {member.user?.name || 'Anonymous'}
                   </p>
                   {member.user_id === cafe.host_id && (
-                    <p className="text-xs text-amber-600">Host</p>
+                    <p className="text-xs text-orange-accent">Host</p>
                   )}
                 </div>
                 <div className="w-2 h-2 bg-green-500 rounded-full"></div>

@@ -51,6 +51,7 @@ const FocusRoom = () => {
   const [isPlayerReady, setIsPlayerReady] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const [playerError, setPlayerError] = useState<string | null>(null);
+  const [apiLoaded, setApiLoaded] = useState(false);
   const playerRef = useRef<any>(null);
   const timerIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const navigate = useNavigate();
@@ -97,26 +98,49 @@ const FocusRoom = () => {
 
   // Initialize YouTube Player
   useEffect(() => {
-    const initializeYouTubePlayer = () => {
+    const initializeYouTubeAPI = () => {
+      // Check if API is already loaded
       if (window.YT && window.YT.Player) {
+        setApiLoaded(true);
         createPlayer();
-      } else {
-        // Load YouTube IFrame API
-        const tag = document.createElement('script');
-        tag.src = 'https://www.youtube.com/iframe_api';
-        const firstScriptTag = document.getElementsByTagName('script')[0];
-        firstScriptTag.parentNode?.insertBefore(tag, firstScriptTag);
-
-        window.onYouTubeIframeAPIReady = createPlayer;
+        return;
       }
+
+      // Check if script is already loading
+      if (document.querySelector('script[src*="youtube.com/iframe_api"]')) {
+        // Script is loading, wait for it
+        const checkAPI = setInterval(() => {
+          if (window.YT && window.YT.Player) {
+            clearInterval(checkAPI);
+            setApiLoaded(true);
+            createPlayer();
+          }
+        }, 100);
+        return;
+      }
+
+      // Load YouTube IFrame API
+      const tag = document.createElement('script');
+      tag.src = 'https://www.youtube.com/iframe_api';
+      tag.async = true;
+      const firstScriptTag = document.getElementsByTagName('script')[0];
+      firstScriptTag.parentNode?.insertBefore(tag, firstScriptTag);
+
+      // Set up the callback
+      window.onYouTubeIframeAPIReady = () => {
+        setApiLoaded(true);
+        createPlayer();
+      };
     };
 
     const createPlayer = () => {
       try {
+        // Destroy existing player
         if (playerRef.current) {
           playerRef.current.destroy();
         }
 
+        // Create new player
         playerRef.current = new window.YT.Player('youtube-player', {
           height: '0',
           width: '0',
@@ -129,35 +153,68 @@ const FocusRoom = () => {
             showinfo: 0,
             loop: 1,
             playlist: curatedTracks[currentTrack].id,
+            enablejsapi: 1,
+            origin: window.location.origin,
           },
           events: {
             onReady: (event: any) => {
               console.log('YouTube player ready');
               setIsPlayerReady(true);
               setPlayerError(null);
+              
+              // Set volume to reasonable level
+              try {
+                event.target.setVolume(50);
+              } catch (error) {
+                console.error('Error setting volume:', error);
+              }
             },
             onStateChange: (event: any) => {
               const state = event.data;
+              console.log('Player state changed:', state);
+              
               if (state === window.YT.PlayerState.PLAYING) {
                 setIsPlaying(true);
               } else if (state === window.YT.PlayerState.PAUSED || state === window.YT.PlayerState.ENDED) {
                 setIsPlaying(false);
               }
+              
+              // Handle video ended - loop or go to next
+              if (state === window.YT.PlayerState.ENDED) {
+                try {
+                  event.target.playVideo(); // Loop current video
+                } catch (error) {
+                  console.error('Error restarting video:', error);
+                }
+              }
             },
             onError: (event: any) => {
               console.error('YouTube player error:', event.data);
-              setPlayerError('Failed to load video. Please try another track.');
+              const errorMessages: { [key: number]: string } = {
+                2: 'Invalid video ID',
+                5: 'HTML5 player error',
+                100: 'Video not found or private',
+                101: 'Video not allowed to be embedded',
+                150: 'Video not allowed to be embedded',
+              };
+              
+              setPlayerError(errorMessages[event.data] || 'Failed to load video');
               setIsPlaying(false);
+              
+              // Try next track on error
+              setTimeout(() => {
+                handleTrackChange('next');
+              }, 2000);
             },
           },
         });
       } catch (error) {
         console.error('Error creating YouTube player:', error);
-        setPlayerError('YouTube player failed to initialize.');
+        setPlayerError('YouTube player failed to initialize');
       }
     };
 
-    initializeYouTubePlayer();
+    initializeYouTubeAPI();
 
     return () => {
       if (playerRef.current) {
@@ -172,8 +229,9 @@ const FocusRoom = () => {
 
   // Handle track changes
   useEffect(() => {
-    if (playerRef.current && isPlayerReady) {
+    if (playerRef.current && isPlayerReady && apiLoaded) {
       try {
+        console.log('Loading new track:', curatedTracks[currentTrack].title);
         playerRef.current.loadVideoById({
           videoId: curatedTracks[currentTrack].id,
           startSeconds: 0,
@@ -182,10 +240,10 @@ const FocusRoom = () => {
         setPlayerError(null);
       } catch (error) {
         console.error('Error loading video:', error);
-        setPlayerError('Failed to load track.');
+        setPlayerError('Failed to load track');
       }
     }
-  }, [currentTrack, isPlayerReady]);
+  }, [currentTrack, isPlayerReady, apiLoaded]);
 
   // Play completion sound
   const playCompletionSound = () => {
@@ -212,7 +270,7 @@ const FocusRoom = () => {
 
   // Player controls
   const handlePlayPause = () => {
-    if (!isPlayerReady || !playerRef.current) {
+    if (!isPlayerReady || !playerRef.current || !apiLoaded) {
       setPlayerError('Player not ready. Please wait...');
       return;
     }
@@ -225,7 +283,7 @@ const FocusRoom = () => {
       }
     } catch (error) {
       console.error('Error controlling playback:', error);
-      setPlayerError('Playback control failed.');
+      setPlayerError('Playback control failed');
     }
   };
 
@@ -290,8 +348,15 @@ const FocusRoom = () => {
 
           {/* Error Display */}
           {playerError && (
-            <div className="text-red-500 text-xs text-center mb-2 p-2 bg-red-50 rounded">
+            <div className="text-error text-xs text-center mb-2 p-2 bg-red-50 rounded">
               {playerError}
+            </div>
+          )}
+
+          {/* Loading State */}
+          {!apiLoaded && (
+            <div className="text-text-muted text-xs text-center mb-2 p-2 bg-cream-secondary rounded">
+              Loading YouTube API...
             </div>
           )}
 
@@ -317,7 +382,7 @@ const FocusRoom = () => {
             </button>
             <button
               onClick={handlePlayPause}
-              disabled={!isPlayerReady}
+              disabled={!isPlayerReady || !apiLoaded}
               className="p-3 bg-orange-accent rounded-full shadow-lg text-text-inverse hover:bg-orange-accent/90 transition-all disabled:opacity-50"
             >
               {isPlaying ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5" />}
@@ -372,7 +437,7 @@ const FocusRoom = () => {
                 setIsActive(true);
                 setIsBreak(false);
                 setTimeLeft(25 * 60);
-                if (isPlayerReady && playerRef.current) {
+                if (isPlayerReady && playerRef.current && apiLoaded) {
                   try {
                     playerRef.current.playVideo();
                   } catch (error) {
@@ -391,7 +456,7 @@ const FocusRoom = () => {
               <button
                 onClick={() => {
                   setIsActive(false);
-                  if (playerRef.current && isPlayerReady) {
+                  if (playerRef.current && isPlayerReady && apiLoaded) {
                     try {
                       playerRef.current.pauseVideo();
                     } catch (error) {
