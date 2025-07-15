@@ -21,9 +21,33 @@ const Chat = ({ cafeId, currentUser }: ChatProps) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const audioRefs = useRef<{ [key: string]: HTMLAudioElement }>({});
 
+  // Helper: localStorage key per cafe
+  const storageKey = `chat_messages_${cafeId}`;
+
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
+
+  // Load messages from localStorage first
+  useEffect(() => {
+    const cached = localStorage.getItem(storageKey);
+    if (cached) {
+      try {
+        setMessages(JSON.parse(cached));
+      } catch (e) {
+        // Ignore parse errors
+      }
+    }
+  }, [cafeId]);
+
+  // Save messages to localStorage whenever they change
+  useEffect(() => {
+    if (messages.length > 0) {
+      localStorage.setItem(storageKey, JSON.stringify(messages));
+    } else {
+      localStorage.removeItem(storageKey);
+    }
+  }, [messages, storageKey]);
 
   useEffect(() => {
     fetchMessages();
@@ -70,6 +94,7 @@ const Chat = ({ cafeId, currentUser }: ChatProps) => {
       );
       
       setMessages(messagesWithSenders);
+      // localStorage will be updated by useEffect
 
     } catch (error) {
       console.error('Error fetching messages:', error);
@@ -123,6 +148,7 @@ const Chat = ({ cafeId, currentUser }: ChatProps) => {
             
             return updated;
           });
+          // localStorage will be updated by useEffect
         }
       )
       .subscribe();
@@ -161,6 +187,7 @@ const Chat = ({ cafeId, currentUser }: ChatProps) => {
       };
       
       setMessages(prev => [...prev, optimisticMessage]);
+      // localStorage will be updated by useEffect
 
       // Send user message to database
       const { data, error } = await supabase
@@ -187,6 +214,7 @@ const Chat = ({ cafeId, currentUser }: ChatProps) => {
             ? { ...data, sender: currentUser }
             : msg
         ));
+        // localStorage will be updated by useEffect
       }
 
       // Check if message is directed to AI bartender
