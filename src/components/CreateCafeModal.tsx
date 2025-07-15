@@ -68,22 +68,22 @@ const CreateCafeModal = ({ isOpen, onClose, onSuccess, userId }: CreateCafeModal
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg relative overflow-hidden max-h-[90vh] overflow-y-auto">
-        <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-amber-600 via-yellow-500 to-amber-600"></div>
+      <div className="bg-warm-white rounded-2xl shadow-2xl w-full max-w-lg relative overflow-hidden max-h-[90vh] overflow-y-auto">
+        <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-orange-accent via-golden-accent to-orange-accent"></div>
         
         <div className="p-8">
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center space-x-3">
-              <div className="p-2 bg-amber-100 rounded-full">
-                <Coffee className="h-6 w-6 text-amber-600" />
+              <div className="p-2 bg-orange-accent/20 rounded-full">
+                <Coffee className="h-6 w-6 text-orange-accent" />
               </div>
-              <h2 className="text-2xl font-bold text-gray-800">Create Your Space</h2>
+              <h2 className="text-2xl font-bold text-text-primary">Create Your Space</h2>
             </div>
             <button
               onClick={onClose}
-              className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+              className="p-2 hover:bg-cream-secondary rounded-full transition-colors"
             >
-              <X className="h-5 w-5 text-gray-500" />
+              <X className="h-5 w-5 text-text-muted" />
             </button>
           </div>
 
@@ -95,35 +95,35 @@ const CreateCafeModal = ({ isOpen, onClose, onSuccess, userId }: CreateCafeModal
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-text-secondary mb-2">
                 Space Name
               </label>
               <input
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all"
+                className="w-full px-4 py-3 border border-cream-tertiary rounded-lg focus:ring-2 focus:ring-orange-accent focus:border-transparent transition-all bg-cream-primary"
                 placeholder="My Cozy Corner"
                 required
               />
             </div>
             
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-text-secondary mb-2">
                 Description
               </label>
               <textarea
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 rows={3}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all resize-none"
+                className="w-full px-4 py-3 border border-cream-tertiary rounded-lg focus:ring-2 focus:ring-orange-accent focus:border-transparent transition-all resize-none bg-cream-primary"
                 placeholder="Describe the vibe and atmosphere of your space..."
                 required
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-3">
+              <label className="block text-sm font-medium text-text-secondary mb-3">
                 Theme
               </label>
               <div className="grid grid-cols-2 gap-3">
@@ -132,8 +132,8 @@ const CreateCafeModal = ({ isOpen, onClose, onSuccess, userId }: CreateCafeModal
                     key={themeOption.value}
                     className={`p-4 border-2 rounded-lg cursor-pointer transition-all ${
                       theme === themeOption.value
-                        ? 'border-amber-500 bg-amber-50'
-                        : 'border-gray-200 hover:border-gray-300'
+                        ? 'border-orange-accent bg-orange-accent/10'
+                        : 'border-cream-tertiary hover:border-cream-tertiary/80'
                     }`}
                   >
                     <input
@@ -144,10 +144,10 @@ const CreateCafeModal = ({ isOpen, onClose, onSuccess, userId }: CreateCafeModal
                       onChange={(e) => setTheme(e.target.value)}
                       className="sr-only"
                     />
-                    <div className="text-sm font-medium text-gray-800 mb-1">
+                    <div className="text-sm font-medium text-text-primary mb-1">
                       {themeOption.label}
                     </div>
-                    <div className="text-xs text-gray-500">
+                    <div className="text-xs text-text-muted">
                       {themeOption.description}
                     </div>
                   </label>
@@ -156,7 +156,7 @@ const CreateCafeModal = ({ isOpen, onClose, onSuccess, userId }: CreateCafeModal
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-text-secondary mb-2">
                 Capacity
               </label>
               <input
@@ -165,10 +165,10 @@ const CreateCafeModal = ({ isOpen, onClose, onSuccess, userId }: CreateCafeModal
                 onChange={(e) => setCapacity(parseInt(e.target.value))}
                 min="5"
                 max="100"
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all"
+                className="w-full px-4 py-3 border border-cream-tertiary rounded-lg focus:ring-2 focus:ring-orange-accent focus:border-transparent transition-all bg-cream-primary"
                 required
               />
-              <p className="text-xs text-gray-500 mt-1">
+              <p className="text-xs text-text-muted mt-1">
                 Maximum number of members (5-100)
               </p>
             </div>
@@ -176,7 +176,7 @@ const CreateCafeModal = ({ isOpen, onClose, onSuccess, userId }: CreateCafeModal
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-gradient-to-r from-amber-600 to-yellow-500 text-white py-3 px-4 rounded-lg font-medium hover:from-amber-700 hover:to-yellow-600 transition-all transform hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full bg-gradient-to-r from-orange-accent to-golden-accent text-text-inverse py-3 px-4 rounded-lg font-medium hover:from-orange-accent/90 hover:to-golden-accent/90 transition-all transform hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? 'Creating...' : 'Create Space'}
             </button>

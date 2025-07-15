@@ -3,6 +3,14 @@ import { Play, Pause, SkipBack, SkipForward, ArrowLeft } from 'lucide-react';
 import GlitterParticles from './shared/GlitterParticles';
 import { useNavigate } from 'react-router-dom';
 
+// Declare YouTube API types
+declare global {
+  interface Window {
+    YT: any;
+    onYouTubeIframeAPIReady: () => void;
+  }
+}
+
 const curatedTracks = [
   {
     id: 'jfKfPfyJRdk',
@@ -30,19 +38,20 @@ function getThumbnail(id: string) {
   return `https://i.ytimg.com/vi/${id}/hqdefault.jpg`;
 }
 
-function getEmbedUrl(id: string) {
-  return `https://www.youtube.com/embed/${id}?enablejsapi=1&autoplay=0&controls=0&modestbranding=1&rel=0&showinfo=0`;
-}
-
 const FocusRoom = () => {
+  // Pomodoro timer state
   const [isActive, setIsActive] = useState(false);
   const [timeLeft, setTimeLeft] = useState(25 * 60);
   const [isBreak, setIsBreak] = useState(false);
   const [breakTimeLeft, setBreakTimeLeft] = useState(5 * 60);
   const [sessionsCompleted, setSessionsCompleted] = useState(0);
+
+  // YouTube player state
   const [currentTrack, setCurrentTrack] = useState(0);
+  const [isPlayerReady, setIsPlayerReady] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
-  const iframeRef = useRef<HTMLIFrameElement>(null);
+  const [playerError, setPlayerError] = useState<string | null>(null);
+  const playerRef = useRef<any>(null);
   const timerIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const navigate = useNavigate();
 
@@ -56,10 +65,13 @@ const FocusRoom = () => {
             setIsBreak(true);
             setBreakTimeLeft(5 * 60);
             setSessionsCompleted((s) => s + 1);
-            setIsPlaying(false);
-            if (iframeRef.current) {
-              const iframe = iframeRef.current;
-              iframe.src = getEmbedUrl(curatedTracks[currentTrack].id).replace('&autoplay=1', '&autoplay=0');
+            if (playerRef.current && isPlayerReady) {
+              try {
+                playerRef.current.pauseVideo();
+                setIsPlaying(false);
+              } catch (error) {
+                console.error('Error pausing video:', error);
+              }
             }
             playCompletionSound();
             return 25 * 60;
@@ -81,88 +93,274 @@ const FocusRoom = () => {
     return () => {
       if (timerIntervalRef.current) clearInterval(timerIntervalRef.current);
     };
-  }, [isActive, isBreak, currentTrack]);
+  }, [isActive, isBreak, isPlayerReady]);
 
-  // Play chime sound at end of session
+  // Initialize YouTube Player
+  useEffect(() => {
+    const initializeYouTubePlayer = () => {
+      if (window.YT && window.YT.Player) {
+        createPlayer();
+      } else {
+        // Load YouTube IFrame API
+        const tag = document.createElement('script');
+        tag.src = 'https://www.youtube.com/iframe_api';
+        const firstScriptTag = document.getElementsByTagName('script')[0];
+        firstScriptTag.parentNode?.insertBefore(tag, firstScriptTag);
+
+        window.onYouTubeIframeAPIReady = createPlayer;
+      }
+    };
+
+    const createPlayer = () => {
+      try {
+        if (playerRef.current) {
+          playerRef.current.destroy();
+        }
+
+        playerRef.current = new window.YT.Player('youtube-player', {
+          height: '0',
+          width: '0',
+          videoId: curatedTracks[currentTrack].id,
+          playerVars: {
+            autoplay: 0,
+            controls: 0,
+            modestbranding: 1,
+            rel: 0,
+            showinfo: 0,
+            loop: 1,
+            playlist: curatedTracks[currentTrack].id,
+          },
+          events: {
+            onReady: (event: any) => {
+              console.log('YouTube player ready');
+              setIsPlayerReady(true);
+              setPlayerError(null);
+            },
+            onStateChange: (event: any) => {
+              const state = event.data;
+              if (state === window.YT.PlayerState.PLAYING) {
+                setIsPlaying(true);
+              } else if (state === window.YT.PlayerState.PAUSED || state === window.YT.PlayerState.ENDED) {
+                setIsPlaying(false);
+              }
+            },
+            onError: (event: any) => {
+              console.error('YouTube player error:', event.data);
+              setPlayerError('Failed to load video. Please try another track.');
+              setIsPlaying(false);
+            },
+          },
+        });
+      } catch (error) {
+        console.error('Error creating YouTube player:', error);
+        setPlayerError('YouTube player failed to initialize.');
+      }
+    };
+
+    initializeYouTubePlayer();
+
+    return () => {
+      if (playerRef.current) {
+        try {
+          playerRef.current.destroy();
+        } catch (error) {
+          console.error('Error destroying player:', error);
+        }
+      }
+    };
+  }, []);
+
+  // Handle track changes
+  useEffect(() => {
+    if (playerRef.current && isPlayerReady) {
+      try {
+        playerRef.current.loadVideoById({
+          videoId: curatedTracks[currentTrack].id,
+          startSeconds: 0,
+        });
+        setIsPlaying(false);
+        setPlayerError(null);
+      } catch (error) {
+        console.error('Error loading video:', error);
+        setPlayerError('Failed to load track.');
+      }
+    }
+  }, [currentTrack, isPlayerReady]);
+
+  // Play completion sound
   const playCompletionSound = () => {
     try {
       const AudioCtx = (window.AudioContext || (window as any).webkitAudioContext);
-      const audioContext = new AudioCtx();
-      const oscillator = audioContext.createOscillator();
-      const gainNode = audioContext.createGain();
-      oscillator.connect(gainNode);
-      gainNode.connect(audioContext.destination);
-      oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
-      oscillator.frequency.setValueAtTime(600, audioContext.currentTime + 0.1);
-      oscillator.frequency.setValueAtTime(800, audioContext.currentTime + 0.2);
-      gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
-      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
-      oscillator.start(audioContext.currentTime);
-      oscillator.stop(audioContext.currentTime + 0.3);
-    } catch {}
+      if (AudioCtx) {
+        const audioContext = new AudioCtx();
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+        oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
+        oscillator.frequency.setValueAtTime(600, audioContext.currentTime + 0.1);
+        oscillator.frequency.setValueAtTime(800, audioContext.currentTime + 0.2);
+        gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+        oscillator.start(audioContext.currentTime);
+        oscillator.stop(audioContext.currentTime + 0.3);
+      }
+    } catch (error) {
+      console.error('Error playing completion sound:', error);
+    }
   };
 
-  // Track change logic
+  // Player controls
+  const handlePlayPause = () => {
+    if (!isPlayerReady || !playerRef.current) {
+      setPlayerError('Player not ready. Please wait...');
+      return;
+    }
+
+    try {
+      if (isPlaying) {
+        playerRef.current.pauseVideo();
+      } else {
+        playerRef.current.playVideo();
+      }
+    } catch (error) {
+      console.error('Error controlling playback:', error);
+      setPlayerError('Playback control failed.');
+    }
+  };
+
   const handleTrackChange = (direction: 'next' | 'prev') => {
     setCurrentTrack((prev) => {
-      if (direction === 'next') return (prev + 1) % curatedTracks.length;
-      if (direction === 'prev') return (prev - 1 + curatedTracks.length) % curatedTracks.length;
-      return prev;
+      if (direction === 'next') {
+        return (prev + 1) % curatedTracks.length;
+      } else {
+        return (prev - 1 + curatedTracks.length) % curatedTracks.length;
+      }
     });
-    setIsPlaying(false);
-    if (iframeRef.current) {
-      const iframe = iframeRef.current;
-      iframe.src = getEmbedUrl(curatedTracks[(direction === 'next') ? (currentTrack + 1) % curatedTracks.length : (currentTrack - 1 + curatedTracks.length) % curatedTracks.length].id).replace('&autoplay=1', '&autoplay=0');
-    }
   };
 
-  // Play/pause logic
-  const handlePlayPause = () => {
-    if (!isPlaying) {
-      setIsPlaying(true);
-      if (iframeRef.current) {
-        const iframe = iframeRef.current;
-        iframe.src = getEmbedUrl(curatedTracks[currentTrack].id).replace('&autoplay=0', '&autoplay=1');
-      }
-    } else {
-      setIsPlaying(false);
-      if (iframeRef.current) {
-        const iframe = iframeRef.current;
-        iframe.src = getEmbedUrl(curatedTracks[currentTrack].id).replace('&autoplay=1', '&autoplay=0');
-      }
-    }
-  };
-
-  function formatTime(seconds: number) {
+  const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-  }
+  };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 relative z-0">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-coffee-dark via-coffee-medium to-orange-accent relative z-0">
       <GlitterParticles />
+      
+      {/* Back Button */}
       <div className="absolute top-6 left-6 z-20">
         <button
           onClick={() => navigate('/')}
-          className="flex items-center space-x-2 text-white/80 hover:text-white bg-black/30 px-4 py-2 rounded-full shadow transition"
+          className="flex items-center space-x-2 text-text-inverse/80 hover:text-text-inverse bg-black/30 px-4 py-2 rounded-full shadow transition"
         >
           <ArrowLeft className="h-5 w-5" />
           <span>Back</span>
         </button>
       </div>
-      {/* Timer UI above the card */}
+
+      {/* Music Player - Top Right */}
+      <div className="absolute top-6 right-6 z-20 w-80 bg-warm-white rounded-2xl shadow-2xl p-4">
+        {/* Hidden YouTube Player */}
+        <div style={{ position: 'absolute', left: '-9999px', width: 0, height: 0 }}>
+          <div id="youtube-player" />
+        </div>
+
+        {/* Player Content */}
+        <div className="flex flex-col items-center">
+          {/* Thumbnail */}
+          <div className="w-20 h-20 rounded-xl overflow-hidden mb-3 shadow-md">
+            <img
+              src={getThumbnail(curatedTracks[currentTrack].id)}
+              alt={curatedTracks[currentTrack].title}
+              className="w-full h-full object-cover"
+            />
+          </div>
+
+          {/* Title & Artist */}
+          <div className="text-center mb-3">
+            <div className="font-bold text-sm text-text-primary line-clamp-2 mb-1">
+              {curatedTracks[currentTrack].title}
+            </div>
+            <div className="text-text-secondary text-xs">
+              {curatedTracks[currentTrack].artist}
+            </div>
+          </div>
+
+          {/* Error Display */}
+          {playerError && (
+            <div className="text-red-500 text-xs text-center mb-2 p-2 bg-red-50 rounded">
+              {playerError}
+            </div>
+          )}
+
+          {/* Track Indicators */}
+          <div className="flex items-center space-x-1 mb-3">
+            {curatedTracks.map((_, index) => (
+              <div
+                key={index}
+                className={`w-1.5 h-1.5 rounded-full ${
+                  index === currentTrack ? 'bg-orange-accent' : 'bg-cream-tertiary'
+                }`}
+              />
+            ))}
+          </div>
+
+          {/* Controls */}
+          <div className="flex items-center justify-center space-x-3">
+            <button
+              onClick={() => handleTrackChange('prev')}
+              className="p-2 bg-cream-secondary rounded-full shadow-sm text-text-secondary hover:bg-cream-tertiary transition-all"
+            >
+              <SkipBack className="h-4 w-4" />
+            </button>
+            <button
+              onClick={handlePlayPause}
+              disabled={!isPlayerReady}
+              className="p-3 bg-orange-accent rounded-full shadow-lg text-text-inverse hover:bg-orange-accent/90 transition-all disabled:opacity-50"
+            >
+              {isPlaying ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5" />}
+            </button>
+            <button
+              onClick={() => handleTrackChange('next')}
+              className="p-2 bg-cream-secondary rounded-full shadow-sm text-text-secondary hover:bg-cream-tertiary transition-all"
+            >
+              <SkipForward className="h-4 w-4" />
+            </button>
+          </div>
+
+          {/* Playing Status */}
+          {isPlaying && (
+            <div className="mt-2 text-center">
+              <div className="text-orange-accent text-xs font-medium">Now Playing</div>
+              <div className="flex items-center justify-center space-x-1 mt-1">
+                {[...Array(5)].map((_, i) => (
+                  <div
+                    key={i}
+                    className="w-0.5 h-2 bg-orange-accent rounded-full animate-pulse"
+                    style={{ animationDelay: `${i * 0.1}s` }}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Timer UI */}
       <div className="mb-8 flex flex-col items-center z-10">
-        <div className="w-64 h-64 rounded-full border-8 border-white/20 flex items-center justify-center relative mb-4">
+        <div className="w-64 h-64 rounded-full border-8 border-warm-white/20 flex items-center justify-center relative mb-4">
           <div className="text-center">
-            <div className="text-4xl md:text-5xl font-mono font-bold text-white mb-2">
+            <div className="text-4xl md:text-5xl font-mono font-bold text-text-inverse mb-2">
               {isBreak ? formatTime(breakTimeLeft) : formatTime(timeLeft)}
             </div>
-            <div className="text-white/60 text-sm">
+            <div className="text-text-inverse/60 text-sm">
               {isActive ? 'Focus Time' : isBreak ? 'Break Time' : 'Ready to Focus'}
             </div>
           </div>
         </div>
+        
         <div className="flex items-center space-x-6">
           {!isActive ? (
             <button
@@ -174,14 +372,16 @@ const FocusRoom = () => {
                 setIsActive(true);
                 setIsBreak(false);
                 setTimeLeft(25 * 60);
-                setIsPlaying(true);
-                if (iframeRef.current) {
-                  const iframe = iframeRef.current;
-                  iframe.src = getEmbedUrl(curatedTracks[currentTrack].id).replace('&autoplay=0', '&autoplay=1');
+                if (isPlayerReady && playerRef.current) {
+                  try {
+                    playerRef.current.playVideo();
+                  } catch (error) {
+                    console.error('Error starting playback:', error);
+                  }
                 }
               }}
               disabled={isBreak && breakTimeLeft > 0}
-              className="flex items-center space-x-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white px-8 py-4 rounded-full font-semibold hover:from-purple-700 hover:to-pink-700 transition-all transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex items-center space-x-2 bg-gradient-to-r from-orange-accent to-golden-accent text-text-inverse px-8 py-4 rounded-full font-semibold hover:from-orange-accent/90 hover:to-golden-accent/90 transition-all transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Play className="h-5 w-5" />
               <span>Start Focus</span>
@@ -191,13 +391,15 @@ const FocusRoom = () => {
               <button
                 onClick={() => {
                   setIsActive(false);
-                  setIsPlaying(false);
-                  if (iframeRef.current) {
-                    const iframe = iframeRef.current;
-                    iframe.src = getEmbedUrl(curatedTracks[currentTrack].id).replace('&autoplay=1', '&autoplay=0');
+                  if (playerRef.current && isPlayerReady) {
+                    try {
+                      playerRef.current.pauseVideo();
+                    } catch (error) {
+                      console.error('Error pausing video:', error);
+                    }
                   }
                 }}
-                className="flex items-center space-x-2 bg-yellow-600 text-white px-6 py-3 rounded-full font-semibold hover:bg-yellow-700 transition-all"
+                className="flex items-center space-x-2 bg-golden-accent text-text-inverse px-6 py-3 rounded-full font-semibold hover:bg-golden-accent/90 transition-all"
               >
                 <Pause className="h-5 w-5" />
                 <span>Pause</span>
@@ -205,93 +407,13 @@ const FocusRoom = () => {
             </div>
           )}
         </div>
-        <div className="text-white/80 text-sm mt-4">
+        
+        <div className="text-text-inverse/80 text-sm mt-4">
           Sessions completed: {sessionsCompleted}
-        </div>
-      </div>
-      {/* YouTube Card UI */}
-      <div className="relative w-full max-w-xs sm:max-w-sm md:max-w-md bg-white rounded-3xl shadow-2xl p-6 flex flex-col items-center z-10">
-        {/* Hidden YouTube Player */}
-        <div style={{ position: 'absolute', left: '-9999px', width: 0, height: 0 }}>
-          <iframe
-            ref={iframeRef}
-            src={getEmbedUrl(curatedTracks[currentTrack].id)}
-            width="0"
-            height="0"
-            frameBorder="0"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-            allowFullScreen
-            title="YouTube Player"
-          />
-        </div>
-        {/* Card Content */}
-        <div className="w-full flex flex-col items-center">
-          {/* Thumbnail */}
-          <div className="w-48 h-48 rounded-2xl overflow-hidden mb-6 shadow-lg">
-            <img
-              src={getThumbnail(curatedTracks[currentTrack].id)}
-              alt={curatedTracks[currentTrack].title}
-              className="w-full h-full object-cover"
-            />
-          </div>
-          {/* Title & Artist */}
-          <div className="text-center mb-4">
-            <div className="font-bold text-lg text-gray-900 line-clamp-2">
-              {curatedTracks[currentTrack].title}
-            </div>
-            <div className="text-gray-500 text-sm">
-              {curatedTracks[currentTrack].artist}
-            </div>
-          </div>
-          {/* Track indicator */}
-          <div className="flex items-center space-x-2 mb-4">
-            {curatedTracks.map((_, index) => (
-              <div
-                key={index}
-                className={`w-2 h-2 rounded-full ${
-                  index === currentTrack ? 'bg-pink-600' : 'bg-gray-300'
-                }`}
-              />
-            ))}
-          </div>
-          {/* Controls */}
-          <div className="flex items-center justify-center space-x-4 w-full">
-            <button
-              onClick={() => handleTrackChange('prev')}
-              className="p-3 bg-gray-100 rounded-full shadow-md text-gray-600 hover:bg-gray-200 transition-all"
-            >
-              <SkipBack className="h-5 w-5" />
-            </button>
-            <button
-              onClick={handlePlayPause}
-              className="p-4 bg-pink-600 rounded-full shadow-lg text-white hover:bg-pink-700 transition-all"
-            >
-              {isPlaying ? <Pause className="h-7 w-7" /> : <Play className="h-7 w-7" />}
-            </button>
-            <button
-              onClick={() => handleTrackChange('next')}
-              className="p-3 bg-gray-100 rounded-full shadow-md text-gray-600 hover:bg-gray-200 transition-all"
-            >
-              <SkipForward className="h-5 w-5" />
-            </button>
-          </div>
-          {/* Playing status */}
-          {isPlaying && (
-            <div className="mt-4 text-center">
-              <div className="text-pink-600 text-sm font-medium">Now Playing</div>
-              <div className="flex items-center justify-center space-x-1 mt-1">
-                <div className="w-1 h-3 bg-pink-600 rounded-full animate-pulse"></div>
-                <div className="w-1 h-4 bg-pink-600 rounded-full animate-pulse" style={{ animationDelay: '0.1s' }}></div>
-                <div className="w-1 h-2 bg-pink-600 rounded-full animate-pulse" style={{ animationDelay: '0.2s' }}></div>
-                <div className="w-1 h-4 bg-pink-600 rounded-full animate-pulse" style={{ animationDelay: '0.3s' }}></div>
-                <div className="w-1 h-3 bg-pink-600 rounded-full animate-pulse" style={{ animationDelay: '0.4s' }}></div>
-              </div>
-            </div>
-          )}
         </div>
       </div>
     </div>
   );
 };
 
-export default FocusRoom; 
+export default FocusRoom;

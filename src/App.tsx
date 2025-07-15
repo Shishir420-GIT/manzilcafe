@@ -234,16 +234,16 @@ function App() {
       <CursorTrail />
       <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50">
         {/* Header */}
-        <header className="bg-white/80 backdrop-blur-sm shadow-sm border-b border-amber-200/50 sticky top-0 z-40">
+        <header className="bg-coffee-dark/95 backdrop-blur-sm shadow-sm border-b border-coffee-medium/50 sticky top-0 z-40">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex items-center justify-between h-16">
               <div className="flex items-center space-x-3">
-                <div className="p-2 bg-gradient-to-br from-amber-600 to-yellow-500 rounded-xl shadow-lg">
-                  <Coffee className="h-6 w-6 text-white" />
+                <div className="p-2 bg-gradient-to-br from-orange-accent to-golden-accent rounded-xl shadow-lg">
+                  <Coffee className="h-6 w-6 text-text-inverse" />
                 </div>
                 <div>
-                  <h1 className="text-xl font-bold text-gray-800">Manziil Café</h1>
-                  <p className="text-xs text-gray-600">Your virtual social space experience</p>
+                  <h1 className="text-xl font-bold text-text-inverse">Manziil Café</h1>
+                  <p className="text-xs text-text-inverse/80">Your virtual social space experience</p>
                 </div>
               </div>
 
@@ -253,28 +253,28 @@ function App() {
                     <div className="hidden sm:flex items-center space-x-3 text-sm">
                       <button
                         onClick={() => setShowUserProfile(true)}
-                        className="w-8 h-8 bg-gradient-to-br from-amber-400 to-amber-600 rounded-full flex items-center justify-center text-white font-medium hover:scale-105 transition-transform"
+                        className="w-8 h-8 bg-gradient-to-br from-orange-accent to-golden-accent rounded-full flex items-center justify-center text-text-inverse font-medium hover:scale-105 transition-transform"
                       >
                         {user.name.charAt(0).toUpperCase()}
                       </button>
-                      <span className="text-gray-700">Welcome, {user.name}</span>
+                      <span className="text-text-inverse/90">Welcome, {user.name}</span>
                     </div>
                     <button
                       onClick={() => setShowUserProfile(true)}
-                      className="p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-full transition-all sm:hidden"
+                      className="p-2 text-text-inverse/80 hover:text-text-inverse hover:bg-coffee-medium rounded-full transition-all sm:hidden"
                     >
                       <UserIcon className="h-5 w-5" />
                     </button>
                     <button
                       onClick={() => setShowInfoPanel(true)}
-                      className="p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-full transition-all"
+                      className="p-2 text-text-inverse/80 hover:text-text-inverse hover:bg-coffee-medium rounded-full transition-all"
                       title="App Information"
                     >
                       <Info className="h-5 w-5" />
                     </button>
                     <button
                       onClick={handleSignOut}
-                      className="p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-full transition-all"
+                      className="p-2 text-text-inverse/80 hover:text-text-inverse hover:bg-coffee-medium rounded-full transition-all"
                     >
                       <LogOut className="h-5 w-5" />
                     </button>
@@ -283,14 +283,14 @@ function App() {
                   <>
                     <button
                       onClick={() => setShowInfoPanel(true)}
-                      className="p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-full transition-all"
+                      className="p-2 text-text-inverse/80 hover:text-text-inverse hover:bg-coffee-medium rounded-full transition-all"
                       title="App Information"
                     >
                       <Info className="h-5 w-5" />
                     </button>
                     <button
                       onClick={() => setShowAuthModal(true)}
-                      className="bg-gradient-to-r from-amber-600 to-yellow-500 text-white px-6 py-2 rounded-lg font-medium hover:from-amber-700 hover:to-yellow-600 transition-all transform hover:scale-105"
+                      className="bg-gradient-to-r from-orange-accent to-golden-accent text-text-inverse px-6 py-2 rounded-lg font-medium hover:from-orange-accent/90 hover:to-golden-accent/90 transition-all transform hover:scale-105"
                     >
                       Join Now
                     </button>
@@ -302,33 +302,33 @@ function App() {
         </header>
 
         {/* Main Content */}
-        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 bg-warm-white min-h-screen">
           {user ? (
             <>
               {/* Actions Bar */}
               <div className="flex flex-col sm:flex-row items-center justify-between mb-8 space-y-4 sm:space-y-0">
                 <div className="relative flex-1 max-w-md">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-text-muted" />
                   <input
                     type="text"
                     placeholder="Search spaces..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all"
+                    className="w-full pl-10 pr-4 py-2 border border-cream-tertiary rounded-lg focus:ring-2 focus:ring-orange-accent focus:border-transparent transition-all bg-cream-primary"
                   />
                 </div>
                 
                 <div className="flex items-center space-x-4">
                   <button
                     onClick={() => setShowCreateModal(true)}
-                    className="flex items-center space-x-2 bg-gradient-to-r from-amber-600 to-yellow-500 text-white px-6 py-2 rounded-lg font-medium hover:from-amber-700 hover:to-yellow-600 transition-all transform hover:scale-105"
+                    className="flex items-center space-x-2 bg-gradient-to-r from-orange-accent to-golden-accent text-text-inverse px-6 py-2 rounded-lg font-medium hover:from-orange-accent/90 hover:to-golden-accent/90 transition-all transform hover:scale-105"
                   >
                     <Plus className="h-4 w-4" />
                     <span>Create Space</span>
                   </button>
                   <button
                     onClick={() => setShowBartenderChat(true)}
-                    className="flex items-center space-x-2 bg-gradient-to-r from-amber-600 to-yellow-500 text-white px-6 py-2 rounded-lg font-medium hover:from-amber-700 hover:to-yellow-600 transition-all transform hover:scale-105"
+                    className="flex items-center space-x-2 bg-gradient-to-r from-coffee-medium to-coffee-light text-text-inverse px-6 py-2 rounded-lg font-medium hover:from-coffee-medium/90 hover:to-coffee-light/90 transition-all transform hover:scale-105"
                   >
                     <Coffee className="h-4 w-4" />
                     <span>Connect with Bartender</span>
@@ -336,7 +336,7 @@ function App() {
                   {/* Focus Room Button */}
                   <button
                     onClick={() => navigate('/focusroom')}
-                    className="flex items-center space-x-2 bg-gradient-to-r from-purple-600 to-pink-500 text-white px-6 py-2 rounded-lg font-medium hover:from-purple-700 hover:to-pink-600 transition-all transform hover:scale-105"
+                    className="flex items-center space-x-2 bg-gradient-to-r from-coffee-dark to-coffee-medium text-text-inverse px-6 py-2 rounded-lg font-medium hover:from-coffee-dark/90 hover:to-coffee-medium/90 transition-all transform hover:scale-105"
                   >
                     <Clock className="h-4 w-4" />
                     <span>Focus Work in Pomodoro</span>
@@ -348,11 +348,11 @@ function App() {
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 {filteredCafes.length === 0 ? (
                   <div className="col-span-full text-center py-12">
-                    <Coffee className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                    <h3 className="text-lg font-medium text-gray-700 mb-2">
+                    <Coffee className="h-12 w-12 text-text-muted mx-auto mb-4" />
+                    <h3 className="text-lg font-medium text-text-secondary mb-2">
                       {searchTerm ? 'No spaces found' : 'No spaces yet'}
                     </h3>
-                    <p className="text-gray-500">
+                    <p className="text-text-muted">
                       {searchTerm 
                         ? 'Try adjusting your search terms'
                         : 'Be the first to create a space and start the conversation!'
@@ -380,13 +380,13 @@ function App() {
                 className="max-w-3xl mx-auto"
               >
                 <div className="mb-8">
-                  <div className="p-4 bg-gradient-to-br from-amber-600 to-yellow-500 rounded-2xl shadow-2xl inline-block mb-6">
-                    <Coffee className="h-16 w-16 text-white" />
+                  <div className="p-4 bg-gradient-to-br from-orange-accent to-golden-accent rounded-2xl shadow-2xl inline-block mb-6">
+                    <Coffee className="h-16 w-16 text-text-inverse" />
                   </div>
-                  <h1 className="text-5xl font-bold text-gray-800 mb-4">
-                    Welcome to <span className="text-amber-600">Manziil Café</span>
+                  <h1 className="text-5xl font-bold text-text-primary mb-4">
+                    Welcome to <span className="text-orange-accent">Manziil Café</span>
                   </h1>
-                  <p className="text-xl text-gray-600 mb-8">
+                  <p className="text-xl text-text-secondary mb-8">
                     Create or join virtual spaces, chat with friends, order virtual treats, 
                     and get recommendations from our AI bartender. Your cozy corner in the digital world.
                   </p>
@@ -395,39 +395,39 @@ function App() {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
                   <motion.div
                     whileHover={{ scale: 1.05 }}
-                    className="p-6 bg-white rounded-xl shadow-lg"
+                    className="p-6 bg-cream-primary rounded-xl shadow-lg border border-cream-tertiary"
                   >
-                    <div className="w-12 h-12 bg-amber-100 rounded-lg flex items-center justify-center mb-4 mx-auto">
-                      <Coffee className="h-6 w-6 text-amber-600" />
+                    <div className="w-12 h-12 bg-orange-accent/20 rounded-lg flex items-center justify-center mb-4 mx-auto">
+                      <Coffee className="h-6 w-6 text-orange-accent" />
                     </div>
-                    <h3 className="text-lg font-semibold text-gray-800 mb-2">Virtual Spaces</h3>
-                    <p className="text-gray-600 text-sm">
+                    <h3 className="text-lg font-semibold text-text-primary mb-2">Virtual Spaces</h3>
+                    <p className="text-text-secondary text-sm">
                       Create themed spaces and invite friends for cozy conversations
                     </p>
                   </motion.div>
 
                   <motion.div
                     whileHover={{ scale: 1.05 }}
-                    className="p-6 bg-white rounded-xl shadow-lg"
+                    className="p-6 bg-cream-primary rounded-xl shadow-lg border border-cream-tertiary"
                   >
-                    <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4 mx-auto">
-                      <Users className="h-6 w-6 text-blue-600" />
+                    <div className="w-12 h-12 bg-coffee-medium/20 rounded-lg flex items-center justify-center mb-4 mx-auto">
+                      <Users className="h-6 w-6 text-coffee-medium" />
                     </div>
-                    <h3 className="text-lg font-semibold text-gray-800 mb-2">Real-time Chat</h3>
-                    <p className="text-gray-600 text-sm">
+                    <h3 className="text-lg font-semibold text-text-primary mb-2">Real-time Chat</h3>
+                    <p className="text-text-secondary text-sm">
                       Engage in live conversations with fellow space visitors
                     </p>
                   </motion.div>
 
                   <motion.div
                     whileHover={{ scale: 1.05 }}
-                    className="p-6 bg-white rounded-xl shadow-lg"
+                    className="p-6 bg-cream-primary rounded-xl shadow-lg border border-cream-tertiary"
                   >
-                    <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mb-4 mx-auto">
-                      <Coffee className="h-6 w-6 text-green-600" />
+                    <div className="w-12 h-12 bg-golden-accent/20 rounded-lg flex items-center justify-center mb-4 mx-auto">
+                      <Coffee className="h-6 w-6 text-golden-accent" />
                     </div>
-                    <h3 className="text-lg font-semibold text-gray-800 mb-2">AI Bartender</h3>
-                    <p className="text-gray-600 text-sm">
+                    <h3 className="text-lg font-semibold text-text-primary mb-2">AI Bartender</h3>
+                    <p className="text-text-secondary text-sm">
                       Get personalized recommendations and assistance from our AI helper
                     </p>
                   </motion.div>
@@ -435,7 +435,7 @@ function App() {
 
                 <button
                   onClick={() => setShowAuthModal(true)}
-                  className="bg-gradient-to-r from-amber-600 to-yellow-500 text-white px-8 py-4 rounded-xl font-semibold text-lg hover:from-amber-700 hover:to-yellow-600 transition-all transform hover:scale-105 shadow-lg"
+                  className="bg-gradient-to-r from-orange-accent to-golden-accent text-text-inverse px-8 py-4 rounded-xl font-semibold text-lg hover:from-orange-accent/90 hover:to-golden-accent/90 transition-all transform hover:scale-105 shadow-lg"
                 >
                   Start Your Space Journey
                 </button>

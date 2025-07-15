@@ -108,24 +108,24 @@ const AuthModal = ({ isOpen, onClose, onSuccess }: AuthModalProps) => {
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md relative overflow-hidden">
-        <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-amber-600 via-yellow-500 to-amber-600"></div>
+      <div className="bg-warm-white rounded-2xl shadow-2xl w-full max-w-md relative overflow-hidden">
+        <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-orange-accent via-golden-accent to-orange-accent"></div>
         
         <div className="p-8">
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center space-x-3">
-              <div className="p-2 bg-amber-100 rounded-full">
-                <Coffee className="h-6 w-6 text-amber-600" />
+              <div className="p-2 bg-orange-accent/20 rounded-full">
+                <Coffee className="h-6 w-6 text-orange-accent" />
               </div>
-              <h2 className="text-2xl font-bold text-gray-800">
+              <h2 className="text-2xl font-bold text-text-primary">
                 {isLogin ? 'Welcome Back' : 'Join Manziil'}
               </h2>
             </div>
             <button
               onClick={onClose}
-              className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+              className="p-2 hover:bg-cream-secondary rounded-full transition-colors"
             >
-              <X className="h-5 w-5 text-gray-500" />
+              <X className="h-5 w-5 text-text-muted" />
             </button>
           </div>
 
@@ -138,14 +138,14 @@ const AuthModal = ({ isOpen, onClose, onSuccess }: AuthModalProps) => {
           <form onSubmit={handleSubmit} className="space-y-4">
             {!isLogin && (
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-text-secondary mb-2">
                   Name
                 </label>
                 <input
                   type="text"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all"
+                  className="w-full px-4 py-3 border border-cream-tertiary rounded-lg focus:ring-2 focus:ring-orange-accent focus:border-transparent transition-all bg-cream-primary"
                   placeholder="Your name"
                   required={!isLogin}
                 />
@@ -153,28 +153,28 @@ const AuthModal = ({ isOpen, onClose, onSuccess }: AuthModalProps) => {
             )}
             
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-text-secondary mb-2">
                 Email
               </label>
               <input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all"
+                className="w-full px-4 py-3 border border-cream-tertiary rounded-lg focus:ring-2 focus:ring-orange-accent focus:border-transparent transition-all bg-cream-primary"
                 placeholder="your.email@example.com"
                 required
               />
             </div>
             
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-text-secondary mb-2">
                 Password
               </label>
               <input
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all"
+                className="w-full px-4 py-3 border border-cream-tertiary rounded-lg focus:ring-2 focus:ring-orange-accent focus:border-transparent transition-all bg-cream-primary"
                 placeholder="••••••••"
                 required
               />
@@ -183,7 +183,7 @@ const AuthModal = ({ isOpen, onClose, onSuccess }: AuthModalProps) => {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-gradient-to-r from-amber-600 to-yellow-500 text-white py-3 px-4 rounded-lg font-medium hover:from-amber-700 hover:to-yellow-600 transition-all transform hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full bg-gradient-to-r from-orange-accent to-golden-accent text-text-inverse py-3 px-4 rounded-lg font-medium hover:from-orange-accent/90 hover:to-golden-accent/90 transition-all transform hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? 'Processing...' : (isLogin ? 'Sign In' : 'Create Account')}
             </button>
@@ -192,10 +192,10 @@ const AuthModal = ({ isOpen, onClose, onSuccess }: AuthModalProps) => {
           {/* Divider */}
           <div className="relative my-6">
             <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-300" />
+              <div className="w-full border-t border-cream-tertiary" />
             </div>
             <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-white text-gray-500">Or continue with</span>
+              <span className="px-2 bg-warm-white text-text-muted">Or continue with</span>
             </div>
           </div>
 
@@ -205,7 +205,7 @@ const AuthModal = ({ isOpen, onClose, onSuccess }: AuthModalProps) => {
             <button
               onClick={handleGoogleSignIn}
               disabled={loading}
-              className="w-full flex items-center justify-center space-x-3 bg-white border border-gray-300 text-gray-700 py-3 px-4 rounded-lg font-medium hover:bg-gray-50 transition-all transform hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full flex items-center justify-center space-x-3 bg-cream-primary border border-cream-tertiary text-text-primary py-3 px-4 rounded-lg font-medium hover:bg-cream-secondary transition-all transform hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <svg className="w-5 h-5" viewBox="0 0 24 24">
                 <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -244,7 +244,7 @@ const AuthModal = ({ isOpen, onClose, onSuccess }: AuthModalProps) => {
           <div className="mt-6 text-center">
             <button
               onClick={() => setIsLogin(!isLogin)}
-              className="text-amber-600 hover:text-amber-700 transition-colors"
+              className="text-orange-accent hover:text-orange-accent/80 transition-colors"
             >
               {isLogin ? "Don't have an account? Sign up" : 'Already have an account? Sign in'}
             </button>

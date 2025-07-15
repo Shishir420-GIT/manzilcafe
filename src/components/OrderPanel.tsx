@@ -107,24 +107,24 @@ const OrderPanel = ({ cafeId, userId }: OrderPanelProps) => {
   };
 
   return (
-    <div className="bg-white h-full flex flex-col">
+    <div className="bg-warm-white h-full flex flex-col">
       {/* Header */}
-      <div className="p-4 border-b border-gray-200">
+      <div className="p-4 border-b border-cream-tertiary">
         <div className="flex items-center space-x-2">
-          <ShoppingCart className="h-5 w-5 text-amber-600" />
-          <h3 className="text-lg font-semibold text-gray-800">Menu & Orders</h3>
+          <ShoppingCart className="h-5 w-5 text-orange-accent" />
+          <h3 className="text-lg font-semibold text-text-primary">Menu & Orders</h3>
         </div>
       </div>
 
       {/* Menu Items */}
-      <div className="p-4 border-b border-gray-200">
-        <h4 className="text-sm font-medium text-gray-700 mb-3">Today's Menu</h4>
+      <div className="p-4 border-b border-cream-tertiary">
+        <h4 className="text-sm font-medium text-text-secondary mb-3">Today's Menu</h4>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {menuItems.map((item) => (
             <motion.div
               key={item.id}
               whileHover={{ scale: 1.02 }}
-              className="border border-gray-200 rounded-lg p-3 hover:shadow-md transition-all"
+              className="border border-cream-tertiary rounded-lg p-3 hover:shadow-md transition-all bg-cream-primary hover:border-orange-accent/30"
             >
               <div className="flex items-center space-x-3">
                 <img
@@ -133,19 +133,19 @@ const OrderPanel = ({ cafeId, userId }: OrderPanelProps) => {
                   className="w-12 h-12 rounded-lg object-cover"
                 />
                 <div className="flex-1">
-                  <h5 className="font-medium text-gray-800 text-sm">{item.name}</h5>
-                  <p className="text-xs text-gray-500 line-clamp-1">{item.description}</p>
+                  <h5 className="font-medium text-text-primary text-sm">{item.name}</h5>
+                  <p className="text-xs text-text-muted line-clamp-1">{item.description}</p>
                   <div className="flex items-center justify-between mt-1">
-                    <span className="text-sm font-semibold text-amber-600">
+                    <span className="text-sm font-semibold text-golden-accent">
                       ${item.price.toFixed(2)}
                     </span>
                     <button
                       onClick={() => placeOrder(item)}
                       disabled={loading === item.id}
-                      className="flex items-center space-x-1 px-2 py-1 bg-amber-600 text-white rounded text-xs hover:bg-amber-700 transition-colors disabled:opacity-50"
+                      className="flex items-center space-x-1 px-2 py-1 bg-orange-accent text-text-inverse rounded text-xs hover:bg-orange-accent/90 transition-colors disabled:opacity-50"
                     >
                       {loading === item.id ? (
-                        <div className="w-3 h-3 border border-white border-t-transparent rounded-full animate-spin" />
+                        <div className="w-3 h-3 border border-text-inverse border-t-transparent rounded-full animate-spin" />
                       ) : (
                         <Plus className="h-3 w-3" />
                       )}
@@ -161,32 +161,32 @@ const OrderPanel = ({ cafeId, userId }: OrderPanelProps) => {
 
       {/* Recent Orders */}
       <div className="flex-1 p-4 overflow-y-auto">
-        <h4 className="text-sm font-medium text-gray-700 mb-3">Recent Orders</h4>
+        <h4 className="text-sm font-medium text-text-secondary mb-3">Recent Orders</h4>
         <div className="space-y-2">
           {orders.length === 0 ? (
-            <p className="text-sm text-gray-500 text-center py-4">
+            <p className="text-sm text-text-muted text-center py-4">
               No orders yet. Be the first to order something!
             </p>
           ) : (
             orders.map((order) => (
               <div
                 key={order.id}
-                className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                className="flex items-center justify-between p-3 bg-cream-secondary rounded-lg"
               >
                 <div className="flex-1">
                   <div className="flex items-center space-x-2">
-                    <span className="text-sm font-medium text-gray-800">
+                    <span className="text-sm font-medium text-text-primary">
                       {order.item_name}
                     </span>
-                    <span className="text-xs text-gray-500">
+                    <span className="text-xs text-text-muted">
                       by {order.user?.name || 'Someone'}
                     </span>
                   </div>
                   <div className="flex items-center space-x-2 mt-1">
-                    <span className="text-xs text-gray-500">
+                    <span className="text-xs text-text-muted">
                       {formatTime(order.timestamp)}
                     </span>
-                    <span className="text-xs font-medium text-amber-600">
+                    <span className="text-xs font-medium text-golden-accent">
                       ${order.price.toFixed(2)}
                     </span>
                   </div>
@@ -195,7 +195,7 @@ const OrderPanel = ({ cafeId, userId }: OrderPanelProps) => {
                   {order.status === 'completed' ? (
                     <Check className="h-4 w-4 text-green-500" />
                   ) : (
-                    <div className="w-2 h-2 bg-amber-500 rounded-full animate-pulse" />
+                    <div className="w-2 h-2 bg-golden-accent rounded-full animate-pulse" />
                   )}
                 </div>
               </div>

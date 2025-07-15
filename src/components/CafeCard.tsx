@@ -22,7 +22,7 @@ const CafeCard = ({ cafe, onClick }: CafeCardProps) => {
       whileHover={{ scale: 1.02, y: -5 }}
       whileTap={{ scale: 0.98 }}
       onClick={onClick}
-      className="bg-white rounded-xl shadow-lg overflow-hidden cursor-pointer group"
+      className="bg-cream-primary rounded-xl shadow-lg overflow-hidden cursor-pointer group border border-cream-tertiary hover:border-orange-accent/30 transition-all"
     >
       <div className="relative h-48 overflow-hidden">
         <img
@@ -30,8 +30,8 @@ const CafeCard = ({ cafe, onClick }: CafeCardProps) => {
           alt={cafe.name}
           className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
-        <div className="absolute bottom-4 left-4 text-white">
+        <div className="absolute inset-0 bg-gradient-to-t from-coffee-dark/60 to-transparent" />
+        <div className="absolute bottom-4 left-4 text-text-inverse">
           <h3 className="text-xl font-bold mb-1">{cafe.name}</h3>
           <div className="flex items-center space-x-4 text-sm">
             <div className="flex items-center space-x-1">
@@ -47,16 +47,16 @@ const CafeCard = ({ cafe, onClick }: CafeCardProps) => {
       </div>
       
       <div className="p-6">
-        <p className="text-gray-600 text-sm mb-4 line-clamp-2">
+        <p className="text-text-secondary text-sm mb-4 line-clamp-2">
           {cafe.description}
         </p>
         
         <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-2 text-sm text-gray-500">
+          <div className="flex items-center space-x-2 text-sm text-text-muted">
             <Clock className="h-4 w-4" />
             <span>Active now</span>
           </div>
-          <div className="text-xs text-gray-400 capitalize">
+          <div className="text-xs text-text-muted capitalize">
             {cafe.theme} theme
           </div>
         </div>

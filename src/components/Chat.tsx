@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Send, Bot, User, Coffee, Mic, Play, Pause } from 'lucide-react';
+import { Send, Bot, User, Mic, Play, Pause } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { generateAIResponse } from '../lib/gemini';
 import { Message, User as UserType } from '../types';
@@ -18,6 +18,7 @@ const Chat = ({ cafeId, currentUser }: ChatProps) => {
   const [loading, setLoading] = useState(false);
   const [showVoiceRecorder, setShowVoiceRecorder] = useState(false);
   const [playingAudio, setPlayingAudio] = useState<string | null>(null);
+  const [optimisticMessages, setOptimisticMessages] = useState<Message[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const audioRefs = useRef<{ [key: string]: HTMLAudioElement }>({});
 
@@ -27,7 +28,8 @@ const Chat = ({ cafeId, currentUser }: ChatProps) => {
 
   useEffect(() => {
     fetchMessages();
-    subscribeToMessages();
+    const unsubscribe = subscribeToMessages();
+    return unsubscribe;
   }, [cafeId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
@@ -70,7 +72,6 @@ const Chat = ({ cafeId, currentUser }: ChatProps) => {
       
       setMessages(messagesWithSenders);
 
-      if (error) throw error;
     } catch (error) {
       console.error('Error fetching messages:', error);
     }
@@ -90,14 +91,40 @@ const Chat = ({ cafeId, currentUser }: ChatProps) => {
         async (payload) => {
           const newMessage = payload.new as Message;
           
-          // Fetch sender info
-          const { data: sender } = await supabase
-            .from('users')
-            .select('*')
-            .eq('id', newMessage.sender_id)
-            .single();
-
-          setMessages(prev => [...prev, { ...newMessage, sender }]);
+          // Only add if not already in optimistic messages
+          setMessages(prev => {
+            const exists = prev.some(msg => msg.id === newMessage.id);
+            if (exists) return prev;
+            
+            // Fetch sender info for real-time message
+            if (newMessage.sender_id === 'ai-bartender') {
+              return [...prev, {
+                ...newMessage,
+                sender: { id: 'ai-bartender', name: 'AI Bartender', avatar_url: null }
+              }];
+            } else {
+              // Fetch user info asynchronously
+              supabase
+                .from('users')
+                .select('id, name, avatar_url')
+                .eq('id', newMessage.sender_id)
+                .single()
+                .then(({ data: sender }) => {
+                  setMessages(current => 
+                    current.map(msg => 
+                      msg.id === newMessage.id 
+                        ? { ...msg, sender: sender || { id: newMessage.sender_id, name: 'Unknown User', avatar_url: null } }
+                        : msg
+                    )
+                  );
+                });
+              
+              return [...prev, { ...newMessage, sender: { id: newMessage.sender_id, name: 'Loading...', avatar_url: null } }];
+            }
+          });
+          
+          // Remove from optimistic messages
+          setOptimisticMessages(prev => prev.filter(msg => msg.content !== newMessage.content));
         }
       )
       .subscribe();
@@ -124,6 +151,19 @@ const Chat = ({ cafeId, currentUser }: ChatProps) => {
     setLoading(true);
 
     try {
+      // Add optimistic message immediately
+      const optimisticMessage: Message = {
+        id: `temp-${Date.now()}`,
+        cafe_id: cafeId,
+        sender_id: currentUser.id,
+        content: messageText,
+        message_type: 'user',
+        timestamp: new Date().toISOString(),
+        sender: currentUser
+      };
+      
+      setOptimisticMessages(prev => [...prev, optimisticMessage]);
+
       // Send user message
       const { error } = await supabase
         .from('messages')
@@ -134,7 +174,11 @@ const Chat = ({ cafeId, currentUser }: ChatProps) => {
           message_type: 'user',
         });
 
-      if (error) throw error;
+      if (error) {
+        // Remove optimistic message on error
+        setOptimisticMessages(prev => prev.filter(msg => msg.id !== optimisticMessage.id));
+        throw error;
+      }
 
       // Check if message is directed to AI bartender
       if (messageText.toLowerCase().includes('@bartender') || 
@@ -144,6 +188,7 @@ const Chat = ({ cafeId, currentUser }: ChatProps) => {
     } catch (error) {
       console.error('Error sending message:', error);
       setNewMessage(messageText); // Restore message on error
+      // Optimistic message already removed above
     } finally {
       setLoading(false);
     }
@@ -240,6 +285,11 @@ const Chat = ({ cafeId, currentUser }: ChatProps) => {
     }
   };
 
+  // Combine real messages with optimistic messages
+  const allMessages = [...messages, ...optimisticMessages].sort((a, b) => 
+    new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+  );
+
   const formatTime = (timestamp: string) => {
     return new Date(timestamp).toLocaleTimeString('en-US', {
       hour: '2-digit',
@@ -259,11 +309,11 @@ const Chat = ({ cafeId, currentUser }: ChatProps) => {
   };
 
   return (
-    <div className="flex flex-col h-full bg-white">
+    <div className="flex flex-col h-full bg-warm-white">
       {/* Messages */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         <AnimatePresence>
-          {messages.map((message) => (
+          {allMessages.map((message) => (
             <motion.div
               key={message.id}
               initial={{ opacity: 0, y: 20 }}
@@ -276,10 +326,10 @@ const Chat = ({ cafeId, currentUser }: ChatProps) => {
               <div className="flex-shrink-0">
                 <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
                   message.message_type === 'ai' 
-                    ? 'bg-amber-100' 
+                    ? 'bg-golden-accent/20' 
                     : message.sender_id === currentUser.id
-                    ? 'bg-blue-100'
-                    : 'bg-gray-100'
+                    ? 'bg-orange-accent/20'
+                    : 'bg-cream-secondary'
                 }`}>
                   {getMessageIcon(message.message_type)}
                 </div>
@@ -289,25 +339,25 @@ const Chat = ({ cafeId, currentUser }: ChatProps) => {
                 message.sender_id === currentUser.id ? 'text-right' : ''
               }`}>
                 <div className="flex items-center space-x-2 mb-1">
-                  <span className="text-xs font-medium text-gray-600">
+                  <span className="text-xs font-medium text-text-secondary">
                     {message.message_type === 'ai' 
                       ? 'AI Bartender' 
                       : message.sender?.name || 'Anonymous'
                     }
                   </span>
-                  <span className="text-xs text-gray-400">
+                  <span className="text-xs text-text-muted">
                     {formatTime(message.timestamp)}
                   </span>
                 </div>
                 
                 <div className={`px-4 py-2 rounded-lg ${
                   message.sender_id === currentUser.id
-                    ? 'bg-blue-500 text-white'
+                    ? 'bg-orange-accent text-text-inverse'
                     : message.message_type === 'ai'
-                    ? 'bg-amber-50 text-amber-900 border border-amber-200'
+                    ? 'bg-golden-accent/10 text-text-primary border border-golden-accent/30'
                     : message.message_type === 'voice'
                     ? 'bg-green-50 text-green-900 border border-green-200'
-                    : 'bg-gray-100 text-gray-800'
+                    : 'bg-cream-secondary text-text-primary'
                 }`}>
                   {message.message_type === 'voice' && message.audio_data ? (
                     <div className="flex items-center space-x-2">
@@ -335,7 +385,7 @@ const Chat = ({ cafeId, currentUser }: ChatProps) => {
       </div>
 
       {/* Message Input */}
-      <div className="border-t border-gray-200 p-4">
+      <div className="border-t border-cream-tertiary p-4">
         {showVoiceRecorder && (
           <div className="mb-4">
             <VoiceRecorder
@@ -351,14 +401,14 @@ const Chat = ({ cafeId, currentUser }: ChatProps) => {
             value={newMessage}
             onChange={(e) => setNewMessage(e.target.value)}
             placeholder="Type your message... (try @bartender for AI help)"
-            className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all"
+            className="flex-1 px-4 py-2 border border-cream-tertiary rounded-lg focus:ring-2 focus:ring-orange-accent focus:border-transparent transition-all bg-cream-primary"
             disabled={loading}
           />
           <button
             type="button"
             onClick={() => setShowVoiceRecorder(!showVoiceRecorder)}
             className={`px-4 py-2 rounded-lg transition-colors ${
-              showVoiceRecorder ? 'bg-red-600 text-white' : 'bg-gray-200 text-gray-600 hover:bg-gray-300'
+              showVoiceRecorder ? 'bg-red-600 text-text-inverse' : 'bg-cream-secondary text-text-secondary hover:bg-cream-tertiary'
             }`}
           >
             <Mic className="h-4 w-4" />
@@ -366,12 +416,12 @@ const Chat = ({ cafeId, currentUser }: ChatProps) => {
           <button
             type="submit"
             disabled={loading || !newMessage.trim()}
-            className="px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-4 py-2 bg-orange-accent text-text-inverse rounded-lg hover:bg-orange-accent/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Send className="h-4 w-4" />
           </button>
         </form>
-        <p className="text-xs text-gray-500 mt-2">
+        <p className="text-xs text-text-muted mt-2">
           Tip: Type "@bartender" for AI help, or use the mic button for voice messages
         </p>
       </div>
