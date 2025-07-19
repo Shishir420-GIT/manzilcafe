@@ -13,6 +13,7 @@ import BartenderChat from './components/BartenderChat';
 import InfoPanel from './components/InfoPanel';
 import ProfileCompletionReminder from './components/ProfileCompletionReminder';
 import ProfileEditModal from './components/ProfileEditModal';
+import HomePage from './components/HomePage';
 import { useNavigate } from 'react-router-dom';
 import FocusRoom from './components/FocusRoom';
 
@@ -27,6 +28,7 @@ function App() {
   const [showInfoPanel, setShowInfoPanel] = useState(false);
   const [showProfileReminder, setShowProfileReminder] = useState(false);
   const [showProfileEditModal, setShowProfileEditModal] = useState(false);
+  const [currentView, setCurrentView] = useState<'home' | 'browse'>('home');
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const navigate = useNavigate();
@@ -122,7 +124,7 @@ function App() {
       const cafesWithMemberCount = (data || []).map(cafe => ({
         ...cafe,
         host: cafe.users,
-        current_members: cafe.cafe_members?.filter((member: any) => member.status === 'active').length || 0
+        current_members: cafe.cafe_members?.filter((member: { status: string }) => member.status === 'active').length || 0
       }));
       
       setCafes(cafesWithMemberCount);
@@ -279,14 +281,41 @@ function App() {
         <header className="bg-coffee-dark backdrop-blur-sm shadow-sm border-b border-coffee-medium/50 sticky top-0 z-40">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex items-center justify-between h-16">
-              <div className="flex items-center space-x-3">
-                <div className="p-2 bg-gradient-to-br from-orange-accent to-golden-accent rounded-xl shadow-lg">
-                  <Coffee className="h-6 w-6 text-text-inverse" />
+              <div className="flex items-center space-x-6">
+                <div className="flex items-center space-x-3">
+                  <div className="p-2 bg-gradient-to-br from-orange-accent to-golden-accent rounded-xl shadow-lg">
+                    <Coffee className="h-6 w-6 text-text-inverse" />
+                  </div>
+                  <div>
+                    <h1 className="text-xl font-bold text-text-inverse">Manziil Café</h1>
+                    <p className="text-xs text-text-inverse/80">Your virtual social Cafe experience</p>
+                  </div>
                 </div>
-                <div>
-                  <h1 className="text-xl font-bold text-text-inverse">Manziil Café</h1>
-                  <p className="text-xs text-text-inverse/80">Your virtual social Cafe experience</p>
-                </div>
+                
+                {user && (
+                  <nav className="flex items-center space-x-4">
+                    <button
+                      onClick={() => setCurrentView('home')}
+                      className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                        currentView === 'home' 
+                          ? 'bg-orange-accent text-text-inverse' 
+                          : 'text-text-inverse/80 hover:text-text-inverse hover:bg-coffee-medium'
+                      }`}
+                    >
+                      Home
+                    </button>
+                    <button
+                      onClick={() => setCurrentView('browse')}
+                      className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                        currentView === 'browse' 
+                          ? 'bg-orange-accent text-text-inverse' 
+                          : 'text-text-inverse/80 hover:text-text-inverse hover:bg-coffee-medium'
+                      }`}
+                    >
+                      Browse Cafés
+                    </button>
+                  </nav>
+                )}
               </div>
 
               <div className="flex items-center space-x-4">
@@ -344,9 +373,18 @@ function App() {
         </header>
 
         {/* Main Content */}
-        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 min-h-screen">
-          {user ? (
-            <>
+        {user ? (
+          currentView === 'home' ? (
+            <HomePage
+              user={user}
+              onCreateCafe={() => setShowCreateModal(true)}
+              onBrowseCafes={() => setCurrentView('browse')}
+              onSelectCafe={handleCafeSelect}
+              onOpenFocusRoom={() => navigate('/focusroom')}
+              onOpenBartenderChat={() => setShowBartenderChat(true)}
+            />
+          ) : (
+            <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 min-h-screen">
               {/* Actions Bar */}
               <div className="flex flex-col sm:flex-row items-center justify-between mb-8 space-y-4 sm:space-y-0">
                 <div className="relative flex-1 max-w-md">
@@ -411,9 +449,10 @@ function App() {
                   ))
                 )}
               </div>
-            </>
-          ) : (
-            /* Welcome Section */
+            </main>
+          )
+        ) : (
+          <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 min-h-screen">
             <div className="text-center py-20 bg-warm-white rounded-2xl shadow-lg mx-4">
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
@@ -483,8 +522,8 @@ function App() {
                 </button>
               </motion.div>
             </div>
-          )}
-        </main>
+          </main>
+        )}
 
         {/* Modals */}
         <AuthModal

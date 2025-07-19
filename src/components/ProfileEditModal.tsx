@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { Save, X, User as UserIcon, Globe, Upload, Camera } from 'lucide-react';
+import { Save, X, User as UserIcon, Globe, Upload } from 'lucide-react';
 import { User as UserType } from '../types';
 import { supabase } from '../lib/supabase';
 import { motion } from 'framer-motion';
@@ -169,7 +169,7 @@ const ProfileEditModal = ({ user, isOpen, onClose, onUpdate, isFirstTime = false
     try {
       new URL(string);
       return true;
-    } catch (_) {
+    } catch {
       return false;
     }
   };
