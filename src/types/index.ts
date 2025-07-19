@@ -72,3 +72,32 @@ export interface MenuItem {
   category: 'coffee' | 'tea' | 'pastry' | 'snack';
   image_url?: string;
 }
+
+// HomePage related types
+export interface QuickStats {
+  totalCafesVisited: number;
+  totalTimeSpent: string;
+  favoriteTheme: string;
+  currentStreak: number;
+  totalMessages: number;
+  totalOrders: number;
+  totalSessionsCompleted: number;
+}
+
+export interface RecentCafe {
+  id: string;
+  name: string;
+  description: string;
+  theme: string;
+  last_visited: string;
+  member_count: number;
+  isOwner: boolean;
+  host?: User;
+}
+
+export interface HomePageData {
+  stats: QuickStats;
+  recentCafes: RecentCafe[];
+  loading: boolean;
+  error: string | null;
+}

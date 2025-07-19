@@ -36,15 +36,15 @@ const CafeRoom = ({ cafe, currentUser, onLeave }: CafeRoomProps) => {
       }
 
       // Check if already a member
-      const { data: existingMember } = await supabase
+      const { data: existingMember, error: memberError } = await supabase
         .from('cafe_members')
         .select('*')
         .eq('cafe_id', cafe.id)
         .eq('user_id', currentUser.id)
         .single();
 
-      if (!existingMember) {
-        // Insert new membership
+      if (memberError && memberError.code === 'PGRST116') {
+        // No existing member found, insert new membership
         const { error } = await supabase
           .from('cafe_members')
           .insert({
@@ -54,7 +54,7 @@ const CafeRoom = ({ cafe, currentUser, onLeave }: CafeRoomProps) => {
           });
 
         if (error) throw error;
-      } else if (existingMember.status !== 'active') {
+      } else if (existingMember && existingMember.status !== 'active') {
         // Update existing membership to active
         const { error } = await supabase
           .from('cafe_members')
@@ -64,6 +64,7 @@ const CafeRoom = ({ cafe, currentUser, onLeave }: CafeRoomProps) => {
 
         if (error) throw error;
       }
+      // If existingMember exists and status is already 'active', do nothing
     } catch (error) {
       console.error('Error joining space:', error);
     }

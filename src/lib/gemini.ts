@@ -24,7 +24,7 @@ const generateRawAIResponse = async (prompt: string): Promise<string> => {
 // Secure AI response generation with comprehensive protection
 export const generateAIResponse = async (userMessage: string, cafeContext: string = '', userId?: string): Promise<string> => {
   if (!apiKey) {
-    return "I'm having trouble connecting right now, but I'd love to help you with our menu! Our cappuccino is particularly popular today.";
+    return "I'm having some connection difficulties right now, but I'm here for you. Sometimes a warm cup of tea and a moment of quiet can help. How are you feeling today?";
   }
 
   try {
@@ -32,6 +32,6 @@ export const generateAIResponse = async (userMessage: string, cafeContext: strin
     return await secureAIRequest(userMessage, cafeContext, generateRawAIResponse, userId);
   } catch (error) {
     console.error('Error generating AI response:', error);
-    return "I'm having trouble connecting right now, but I'd love to help you with our menu! Our cappuccino is particularly popular today.";
+    return "I'm having some connection difficulties right now, but I'm here for you. Sometimes a warm cup of tea and a moment of quiet can help. How are you feeling today?";
   }
 };
