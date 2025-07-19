@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
-import { User, Edit3, Save, X, Camera, Coffee, MessageCircle, Clock } from 'lucide-react';
+import { Edit3, X, Camera, Coffee, MessageCircle, Clock, Globe } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { User as UserType } from '../types';
 import { motion } from 'framer-motion';
+import ProfileEditModal from './ProfileEditModal';
 
 interface UserProfileProps {
   user: UserType;
@@ -11,10 +12,7 @@ interface UserProfileProps {
 }
 
 const UserProfile = ({ user, onUpdate, onClose }: UserProfileProps) => {
-  const [isEditing, setIsEditing] = useState(false);
-  const [name, setName] = useState(user.name);
-  const [bio, setBio] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
   const [stats, setStats] = useState({
     spacesJoined: 0,
     messagesSent: 0,
@@ -55,25 +53,8 @@ const UserProfile = ({ user, onUpdate, onClose }: UserProfileProps) => {
     }
   };
 
-  const handleSave = async () => {
-    setLoading(true);
-    try {
-      const { data, error } = await supabase
-        .from('users')
-        .update({ name })
-        .eq('id', user.id)
-        .select()
-        .single();
-
-      if (error) throw error;
-      
-      onUpdate(data);
-      setIsEditing(false);
-    } catch (error) {
-      console.error('Error updating profile:', error);
-    } finally {
-      setLoading(false);
-    }
+  const handleProfileUpdate = (updatedUser: UserType) => {
+    onUpdate(updatedUser);
   };
 
   const getRoleColor = (role: string) => {
@@ -105,9 +86,9 @@ const UserProfile = ({ user, onUpdate, onClose }: UserProfileProps) => {
           <div className="flex items-center justify-center -mt-16 mb-4">
             <div className="relative">
               <div className="w-24 h-24 bg-warm-white rounded-full shadow-lg flex items-center justify-center border-4 border-warm-white">
-                {user.avatar_url ? (
+                {user.user_profiles?.profile_picture_url || user.avatar_url ? (
                   <img
-                    src={user.avatar_url}
+                    src={user.user_profiles?.profile_picture_url || user.avatar_url}
                     alt={user.name}
                     className="w-20 h-20 rounded-full object-cover"
                   />
@@ -117,59 +98,56 @@ const UserProfile = ({ user, onUpdate, onClose }: UserProfileProps) => {
                   </div>
                 )}
               </div>
-              <button className="absolute bottom-0 right-0 p-2 bg-orange-accent text-text-inverse rounded-full shadow-lg hover:bg-orange-accent/90 transition-colors">
+              <button 
+                onClick={() => setShowEditModal(true)}
+                className="absolute bottom-0 right-0 p-2 bg-orange-accent text-text-inverse rounded-full shadow-lg hover:bg-orange-accent/90 transition-colors"
+                title="Edit Profile"
+              >
                 <Camera className="h-4 w-4" />
               </button>
             </div>
           </div>
 
           <div className="text-center mb-6">
-            {isEditing ? (
-              <div className="space-y-3">
-                <input
-                  type="text"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  className="w-full text-center text-xl font-bold border border-cream-tertiary rounded-lg px-3 py-2 focus:ring-2 focus:ring-orange-accent focus:border-transparent bg-cream-primary"
-                />
-                <div className="flex justify-center space-x-2">
-                  <button
-                    onClick={handleSave}
-                    disabled={loading}
-                    className="flex items-center space-x-1 px-4 py-2 bg-orange-accent text-text-inverse rounded-lg hover:bg-orange-accent/90 transition-colors disabled:opacity-50"
-                  >
-                    <Save className="h-4 w-4" />
-                    <span>Save</span>
-                  </button>
-                  <button
-                    onClick={() => {
-                      setIsEditing(false);
-                      setName(user.name);
-                    }}
-                    className="flex items-center space-x-1 px-4 py-2 bg-cream-secondary text-text-secondary rounded-lg hover:bg-cream-tertiary transition-colors"
-                  >
-                    <X className="h-4 w-4" />
-                    <span>Cancel</span>
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <div>
-                <div className="flex items-center justify-center space-x-2 mb-2">
-                  <h2 className="text-xl font-bold text-text-primary">{user.name}</h2>
-                  <button
-                    onClick={() => setIsEditing(true)}
-                    className="p-1 text-text-muted hover:text-text-secondary transition-colors"
-                  >
-                    <Edit3 className="h-4 w-4" />
-                  </button>
-                </div>
-                <p className="text-text-secondary text-sm mb-2">{user.email}</p>
-                <span className={`inline-block px-3 py-1 rounded-full text-xs font-medium capitalize ${getRoleColor(user.role)}`}>
-                  {user.role}
-                </span>
+            <div className="flex items-center justify-center space-x-2 mb-2">
+              <h2 className="text-xl font-bold text-text-primary">{user.name}</h2>
+              <button
+                onClick={() => setShowEditModal(true)}
+                className="p-1 text-text-muted hover:text-text-secondary transition-colors"
+                title="Edit Profile"
+              >
+                <Edit3 className="h-4 w-4" />
+              </button>
+            </div>
+            <p className="text-text-secondary text-sm mb-2">{user.email}</p>
+            
+            {/* Bio Section */}
+            {user.user_profiles?.bio && (
+              <div className="bg-cream-secondary rounded-lg p-3 mb-3 max-w-xs mx-auto">
+                <p className="text-text-secondary text-sm italic">"{user.user_profiles.bio}"</p>
               </div>
             )}
+            
+            {/* Profile Completion Status */}
+            {user.user_profiles && !user.user_profiles.profile_completed && (
+              <div className="bg-golden-accent/20 border border-golden-accent/30 rounded-lg p-2 mb-3 max-w-xs mx-auto">
+                <p className="text-golden-accent text-xs font-medium">
+                  Complete your profile to unlock all features
+                </p>
+              </div>
+            )}
+            
+            {/* Timezone */}
+            {user.user_profiles?.timezone && (
+              <div className="flex items-center justify-center space-x-1 text-text-muted text-xs mb-2">
+                <Globe className="h-3 w-3" />
+                <span>{user.user_profiles.timezone}</span>
+              </div>
+            )}
+            
+            <span className={`inline-block px-3 py-1 rounded-full text-xs font-medium capitalize ${getRoleColor(user.role)}`}>
+              {user.role}
+            </span>
           </div>
 
           <div className="grid grid-cols-3 gap-4 mb-6">
@@ -201,6 +179,14 @@ const UserProfile = ({ user, onUpdate, onClose }: UserProfileProps) => {
           </div>
         </div>
       </motion.div>
+
+      {/* Profile Edit Modal */}
+      <ProfileEditModal
+        user={user}
+        isOpen={showEditModal}
+        onClose={() => setShowEditModal(false)}
+        onUpdate={handleProfileUpdate}
+      />
     </div>
   );
 };
