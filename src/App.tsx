@@ -11,6 +11,8 @@ import CafeRoom from './components/CafeRoom';
 import UserProfile from './components/UserProfile';
 import BartenderChat from './components/BartenderChat';
 import InfoPanel from './components/InfoPanel';
+import ProfileCompletionReminder from './components/ProfileCompletionReminder';
+import ProfileEditModal from './components/ProfileEditModal';
 import { useNavigate } from 'react-router-dom';
 import FocusRoom from './components/FocusRoom';
 
@@ -23,9 +25,39 @@ function App() {
   const [showUserProfile, setShowUserProfile] = useState(false);
   const [showBartenderChat, setShowBartenderChat] = useState(false);
   const [showInfoPanel, setShowInfoPanel] = useState(false);
+  const [showProfileReminder, setShowProfileReminder] = useState(false);
+  const [showProfileEditModal, setShowProfileEditModal] = useState(false);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const navigate = useNavigate();
+
+  const checkProfileCompletion = (user: User) => {
+    // Show reminder if profile is not completed and hasn't been dismissed this session
+    const isProfileCompleted = user.user_profiles?.profile_completed ?? false;
+    if (!isProfileCompleted) {
+      const dismissedThisSession = sessionStorage.getItem(`profile-reminder-dismissed-${user.id}`);
+      if (!dismissedThisSession) {
+        setShowProfileReminder(true);
+      }
+    }
+  };
+
+  const handleCompleteProfile = () => {
+    setShowProfileReminder(false);
+    setShowProfileEditModal(true);
+  };
+
+  const handleDismissReminder = () => {
+    setShowProfileReminder(false);
+  };
+
+  const handleProfileUpdate = (updatedUser: User) => {
+    setUser(updatedUser);
+    // If profile was just completed, hide the reminder
+    if (updatedUser.user_profiles?.profile_completed) {
+      setShowProfileReminder(false);
+    }
+  };
 
   const checkUser = async () => {
     try {
@@ -34,7 +66,10 @@ function App() {
       if (session?.user) {
         const { data: userData, error } = await supabase
           .from('users')
-          .select('*')
+          .select(`
+            *,
+            user_profiles (*)
+          `)
           .eq('id', session.user.id)
           .single();
         
@@ -58,9 +93,11 @@ function App() {
             console.error('Error creating user profile:', insertError);
           } else {
             setUser(createdUser);
+            checkProfileCompletion(createdUser);
           }
         } else if (!error && userData) {
           setUser(userData);
+          checkProfileCompletion(userData);
         }
       }
     } catch (error) {
@@ -123,7 +160,10 @@ function App() {
           // User signed in via OAuth, check if profile exists
           const { data: userData, error } = await supabase
             .from('users')
-            .select('*')
+            .select(`
+              *,
+              user_profiles (*)
+            `)
             .eq('id', session.user.id)
             .single();
           
@@ -147,9 +187,11 @@ function App() {
               console.error('Error creating user profile:', insertError);
             } else {
               setUser(createdUser);
+              checkProfileCompletion(createdUser);
             }
           } else if (!error && userData) {
             setUser(userData);
+            checkProfileCompletion(userData);
           }
         } else if (event === 'SIGNED_OUT') {
           setUser(null);
@@ -466,7 +508,7 @@ function App() {
         {user && showUserProfile && (
           <UserProfile
             user={user}
-            onUpdate={setUser}
+            onUpdate={handleProfileUpdate}
             onClose={() => setShowUserProfile(false)}
           />
         )}
@@ -475,6 +517,24 @@ function App() {
           <BartenderChat
             currentUser={user}
             onClose={() => setShowBartenderChat(false)}
+          />
+        )}
+
+        {user && showProfileReminder && (
+          <ProfileCompletionReminder
+            user={user}
+            onCompleteProfile={handleCompleteProfile}
+            onDismiss={handleDismissReminder}
+          />
+        )}
+
+        {user && showProfileEditModal && (
+          <ProfileEditModal
+            user={user}
+            isOpen={showProfileEditModal}
+            onClose={() => setShowProfileEditModal(false)}
+            onUpdate={handleProfileUpdate}
+            isFirstTime={!(user.user_profiles?.profile_completed ?? false)}
           />
         )}
 

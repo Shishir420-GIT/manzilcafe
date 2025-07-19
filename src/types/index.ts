@@ -5,6 +5,19 @@ export interface User {
   avatar_url?: string;
   role: 'visitor' | 'host' | 'moderator';
   created_at: string;
+  user_profiles?: UserProfile;
+}
+
+export interface UserProfile {
+  id: string;
+  user_id: string;
+  profile_completed: boolean;
+  profile_picture_url?: string;
+  bio?: string;
+  timezone?: string;
+  notification_preferences?: Record<string, boolean>;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface Cafe {
