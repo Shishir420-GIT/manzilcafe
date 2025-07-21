@@ -136,6 +136,13 @@ function App() {
   useEffect(() => {
     const initializeApp = async () => {
       try {
+        // Clean up URL on initial load if it has OAuth tokens
+        if (window.location.hash.includes('access_token')) {
+          // Let Supabase handle the OAuth callback first
+          setTimeout(() => {
+            window.history.replaceState({}, document.title, window.location.pathname);
+          }, 1000);
+        }
         
         // Test Supabase connection
         try {
@@ -159,6 +166,12 @@ function App() {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         if (event === 'SIGNED_IN' && session?.user) {
+          // Clean up URL after OAuth callback
+          if (window.location.hash.includes('access_token')) {
+            // Replace current URL with clean version (removes hash parameters)
+            window.history.replaceState({}, document.title, window.location.pathname);
+          }
+          
           // User signed in via OAuth, check if profile exists
           const { data: userData, error } = await supabase
             .from('users')
