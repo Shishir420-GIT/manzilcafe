@@ -94,7 +94,7 @@ function App() {
             .single();
 
           if (insertError) {
-            console.error('Error creating user profile:', insertError);
+            console.error('Error creating user profile - check database configuration');
           } else {
             setUser(createdUser);
             checkProfileCompletion(createdUser);
@@ -201,7 +201,7 @@ function App() {
               .single();
 
             if (insertError) {
-              console.error('Error creating user profile:', insertError);
+              console.error('Error creating user profile - check database configuration');
             } else {
               setUser(createdUser);
               checkProfileCompletion(createdUser);

@@ -79,7 +79,6 @@ const ProfileEditModal = ({ user, isOpen, onClose, onUpdate, isFirstTime = false
         avatar_url: formData.avatar_url.trim() || null
       };
 
-      console.log('Updating user with data:', userUpdateData);
 
       const { data: userData, error: userUpdateError } = await supabase
         .from('users')
@@ -89,7 +88,7 @@ const ProfileEditModal = ({ user, isOpen, onClose, onUpdate, isFirstTime = false
         .single();
 
       if (userUpdateError) {
-        console.error('User table update error:', userUpdateError);
+        console.error('User table update error - check database permissions');
         throw new Error(`User update error: ${userUpdateError.message}`);
       }
 
@@ -103,7 +102,6 @@ const ProfileEditModal = ({ user, isOpen, onClose, onUpdate, isFirstTime = false
         updated_at: new Date().toISOString()
       };
 
-      console.log('Updating user profile with data:', profileUpdateData);
 
       // Check if profile exists first
       const { data: existingProfile } = await supabase
@@ -136,7 +134,7 @@ const ProfileEditModal = ({ user, isOpen, onClose, onUpdate, isFirstTime = false
       }
 
       if (profileUpdateError) {
-        console.error('Profile table update error:', profileUpdateError);
+        console.error('Profile table update error - check database permissions');
         throw new Error(`Profile update error: ${profileUpdateError.message}`);
       }
 
@@ -150,7 +148,6 @@ const ProfileEditModal = ({ user, isOpen, onClose, onUpdate, isFirstTime = false
         user_profiles: profileData
       };
 
-      console.log('Profile updated successfully:', updatedUser);
       onUpdate(updatedUser);
       onClose();
     } catch (err: unknown) {
@@ -193,7 +190,6 @@ const ProfileEditModal = ({ user, isOpen, onClose, onUpdate, isFirstTime = false
         throw new Error(validation.error);
       }
 
-      console.log(`Original image: ${formatFileSize(file.size)}`);
 
       // Compress the image
       const compressedDataUrl = await compressImage(file, {
@@ -204,7 +200,6 @@ const ProfileEditModal = ({ user, isOpen, onClose, onUpdate, isFirstTime = false
         maxSizeBytes: 500 * 1024 // 500KB
       });
 
-      console.log(`Compressed image: ${formatFileSize(getDataUrlSize(compressedDataUrl))}`);
 
       // Update form data and preview
       setFormData(prev => ({ ...prev, profile_picture_url: compressedDataUrl }));

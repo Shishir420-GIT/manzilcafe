@@ -131,7 +131,6 @@ const FocusRoom = () => {
     const initializeYouTubeAPI = () => {
       // Check if API is already loaded
       if (window.YT && window.YT.Player) {
-        console.log('YouTube API already loaded');
         setApiLoaded(true);
         createPlayer();
         return;
@@ -139,11 +138,9 @@ const FocusRoom = () => {
 
       // Check if script is already loading
       if (document.querySelector('script[src*="youtube.com/iframe_api"]')) {
-        console.log('YouTube API script already loading, waiting...');
         // Script is loading, wait for it
         const checkAPI = setInterval(() => {
           if (window.YT && window.YT.Player) {
-            console.log('YouTube API loaded after waiting');
             clearInterval(checkAPI);
             setApiLoaded(true);
             createPlayer();
@@ -152,7 +149,6 @@ const FocusRoom = () => {
         return;
       }
 
-      console.log('Loading YouTube IFrame API...');
       // Load YouTube IFrame API
       const tag = document.createElement('script');
       tag.src = 'https://www.youtube.com/iframe_api';
@@ -162,7 +158,6 @@ const FocusRoom = () => {
 
       // Set up the callback
       window.onYouTubeIframeAPIReady = () => {
-        console.log('YouTube API ready callback triggered');
         setApiLoaded(true);
         createPlayer();
       };
@@ -170,7 +165,6 @@ const FocusRoom = () => {
 
     const createPlayer = () => {
       try {
-        console.log('Creating YouTube player...');
         // Destroy existing player
         if (playerRef.current) {
           playerRef.current.destroy();
@@ -194,7 +188,6 @@ const FocusRoom = () => {
           },
           events: {
             onReady: (event: any) => {
-              console.log('YouTube player ready');
               setIsPlayerReady(true);
               setPlayerError(null);
               
@@ -207,7 +200,6 @@ const FocusRoom = () => {
             },
             onStateChange: (event: any) => {
               const state = event.data;
-              console.log('Player state changed:', state);
               
               if (state === window.YT.PlayerState.PLAYING) {
                 setIsPlaying(true);
@@ -268,7 +260,6 @@ const FocusRoom = () => {
   useEffect(() => {
     if (playerRef.current && isPlayerReady && apiLoaded) {
       try {
-        console.log('Loading new track:', curatedTracks[currentTrack].title);
         playerRef.current.loadVideoById({
           videoId: curatedTracks[currentTrack].id,
           startSeconds: 0,
