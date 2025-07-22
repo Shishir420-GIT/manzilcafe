@@ -23,14 +23,44 @@ const curatedTracks = [
     artist: 'Lofi Girl',
   },
   {
-    id: 'DWcJFNfaw9c',
-    title: 'Deep Focus - Music For Coding, Programming, Working',
-    artist: 'Chill Music Lab',
-  },
-  {
     id: '2gliGzb2_1I',
     title: 'Calm Piano Music 24/7: Study Music, Focus, Think, Meditation, Relaxing Music',
     artist: 'Yellow Brick Cinema',
+  },
+  {
+    id: 'rYEDA3JcQqw',
+    title: 'Rain and Coffee Shop - Lofi Hip Hop Music',
+    artist: 'Lofi Hip Hop',
+  },
+  {
+    id: '36YnV9STBqc',
+    title: 'Deep Focus Music - Binaural Beats Concentration Music',
+    artist: 'Meditation Relax Music',
+  },
+  {
+    id: 'fEvM-OUbaKs',
+    title: 'Coffee House Jazz - Relaxing Instrumental Music',
+    artist: 'Cafe Music BGM channel',
+  },
+  {
+    id: '1fueZCTYkpA',
+    title: 'Relaxing Piano Music for Studying and Concentration',
+    artist: 'Yellow Brick Cinema',
+  },
+  {
+    id: 'WPni755-Krg',
+    title: 'Study Music - Improve Brain Power, Focus Music',
+    artist: 'YellowBrickCinema',
+  },
+  {
+    id: 'RgKAFK5djSk',
+    title: 'Peaceful Guitar Music for Studying',
+    artist: 'Soothing Relaxation',
+  },
+  {
+    id: 'CfPxlb8-ZQ0',
+    title: 'Zen Garden - Meditation and Study Music',
+    artist: 'Meditation Music Zone',
   },
 ];
 
