@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from './lib/supabase';
 import { User, Cafe } from './types';
-import { Coffee, Plus, LogOut, Search, Users, User as UserIcon, Info, Clock } from 'lucide-react';
+import { Coffee, Plus, LogOut, Search, Users, User as UserIcon, Info, Clock, Menu } from 'lucide-react';
 import { motion } from 'framer-motion';
 import CursorTrail from './components/CursorTrail';
 import AuthModal from './components/AuthModal';
@@ -16,6 +16,7 @@ import ProfileEditModal from './components/ProfileEditModal';
 import HomePage from './components/HomePage';
 import { useNavigate } from 'react-router-dom';
 import FocusRoom from './components/FocusRoom';
+import MobileNavDrawer from './components/MobileNavDrawer';
 
 function App() {
   const [user, setUser] = useState<User | null>(null);
@@ -31,6 +32,7 @@ function App() {
   const [currentView, setCurrentView] = useState<'home' | 'browse'>('home');
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [showMobileNav, setShowMobileNav] = useState(false);
   const navigate = useNavigate();
 
   const checkProfileCompletion = (user: User) => {
@@ -295,18 +297,31 @@ function App() {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex items-center justify-between h-16">
               <div className="flex items-center space-x-6">
+                {/* Mobile Menu Button */}
+                {user && (
+                  <button
+                    onClick={() => setShowMobileNav(true)}
+                    className="p-2 text-text-inverse/80 hover:text-text-inverse hover:bg-coffee-medium rounded-lg transition-all md:hidden"
+                    style={{ minHeight: '44px', minWidth: '44px' }}
+                    aria-label="Open navigation menu"
+                  >
+                    <Menu className="h-6 w-6" />
+                  </button>
+                )}
+                
                 <div className="flex items-center space-x-3">
                   <div className="p-2 bg-gradient-to-br from-orange-accent to-golden-accent rounded-xl shadow-lg">
                     <Coffee className="h-6 w-6 text-text-inverse" />
                   </div>
                   <div>
                     <h1 className="text-xl font-bold text-text-inverse">Manziil Café</h1>
-                    <p className="text-xs text-text-inverse/80">Your virtual social Cafe experience</p>
+                    <p className="text-xs text-text-inverse/80 hidden sm:block">Your virtual social Cafe experience</p>
                   </div>
                 </div>
                 
+                {/* Desktop Navigation */}
                 {user && (
-                  <nav className="flex items-center space-x-4">
+                  <nav className="hidden md:flex items-center space-x-4">
                     <button
                       onClick={() => setCurrentView('home')}
                       className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
@@ -331,34 +346,42 @@ function App() {
                 )}
               </div>
 
-              <div className="flex items-center space-x-4">
+              <div className="flex items-center space-x-2 md:space-x-4">
                 {user ? (
                   <>
-                    <div className="hidden sm:flex items-center space-x-3 text-sm">
+                    {/* Desktop User Section */}
+                    <div className="hidden md:flex items-center space-x-3 text-sm">
                       <button
                         onClick={() => setShowUserProfile(true)}
                         className="w-8 h-8 bg-gradient-to-br from-orange-accent to-golden-accent rounded-full flex items-center justify-center text-text-inverse font-medium hover:scale-105 transition-transform"
+                        style={{ minHeight: '44px', minWidth: '44px' }}
                       >
                         {user.name.charAt(0).toUpperCase()}
                       </button>
                       <span className="text-text-inverse/90">Welcome, {user.name}</span>
                     </div>
-                    <button
-                      onClick={() => setShowUserProfile(true)}
-                      className="p-2 text-text-inverse/80 hover:text-text-inverse hover:bg-coffee-medium rounded-full transition-all sm:hidden"
-                    >
-                      <UserIcon className="h-5 w-5" />
-                    </button>
+                    
+                    {/* Mobile/Tablet Actions */}
                     <button
                       onClick={() => setShowInfoPanel(true)}
-                      className="p-2 text-text-inverse/80 hover:text-text-inverse hover:bg-coffee-medium rounded-full transition-all"
+                      className="p-2 text-text-inverse/80 hover:text-text-inverse hover:bg-coffee-medium rounded-full transition-all md:hidden"
+                      style={{ minHeight: '44px', minWidth: '44px' }}
+                      title="App Information"
+                    >
+                      <Info className="h-5 w-5" />
+                    </button>
+                    
+                    {/* Desktop Actions */}
+                    <button
+                      onClick={() => setShowInfoPanel(true)}
+                      className="hidden md:block p-2 text-text-inverse/80 hover:text-text-inverse hover:bg-coffee-medium rounded-full transition-all"
                       title="App Information"
                     >
                       <Info className="h-5 w-5" />
                     </button>
                     <button
                       onClick={handleSignOut}
-                      className="p-2 text-text-inverse/80 hover:text-text-inverse hover:bg-coffee-medium rounded-full transition-all"
+                      className="hidden md:block p-2 text-text-inverse/80 hover:text-text-inverse hover:bg-coffee-medium rounded-full transition-all"
                     >
                       <LogOut className="h-5 w-5" />
                     </button>
@@ -368,15 +391,18 @@ function App() {
                     <button
                       onClick={() => setShowInfoPanel(true)}
                       className="p-2 text-text-inverse/80 hover:text-text-inverse hover:bg-coffee-medium rounded-full transition-all"
+                      style={{ minHeight: '44px', minWidth: '44px' }}
                       title="App Information"
                     >
                       <Info className="h-5 w-5" />
                     </button>
                     <button
                       onClick={() => setShowAuthModal(true)}
-                      className="bg-gradient-to-r from-orange-accent to-golden-accent text-text-inverse px-6 py-2 rounded-lg font-medium hover:from-orange-accent/90 hover:to-golden-accent/90 transition-all transform hover:scale-105"
+                      className="bg-gradient-to-r from-orange-accent to-golden-accent text-text-inverse px-4 md:px-6 py-2 rounded-lg font-medium hover:from-orange-accent/90 hover:to-golden-accent/90 transition-all transform hover:scale-105 text-sm md:text-base"
+                      style={{ minHeight: '44px' }}
                     >
-                      Join Now
+                      <span className="hidden sm:inline">Join Now</span>
+                      <span className="sm:hidden">Join</span>
                     </button>
                   </>
                 )}
@@ -397,60 +423,80 @@ function App() {
               onOpenBartenderChat={() => setShowBartenderChat(true)}
             />
           ) : (
-            <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 min-h-screen">
-              {/* Actions Bar */}
-              <div className="flex flex-col sm:flex-row items-center justify-between mb-8 space-y-4 sm:space-y-0">
-                <div className="relative flex-1 max-w-md">
+            <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8 min-h-screen">
+              {/* Search Bar */}
+              <div className="mb-6">
+                <div className="relative max-w-md mx-auto sm:mx-0">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-text-muted" />
                   <input
                     type="text"
                     placeholder="Search spaces..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2 border border-cream-tertiary rounded-lg focus:ring-2 focus:ring-orange-accent focus:border-transparent transition-all bg-cream-primary"
+                    className="w-full pl-10 pr-4 py-3 border border-cream-tertiary rounded-xl focus:ring-2 focus:ring-orange-accent focus:border-transparent transition-all bg-cream-primary text-base"
+                    style={{ minHeight: '48px' }}
                   />
-                </div>
-                
-                <div className="flex items-center space-x-4">
-                  <button
-                    onClick={() => setShowCreateModal(true)}
-                    className="flex items-center space-x-2 bg-gradient-to-r from-orange-accent to-golden-accent text-text-inverse px-6 py-2 rounded-lg font-medium hover:from-orange-accent/90 hover:to-golden-accent/90 transition-all transform hover:scale-105"
-                  >
-                    <Plus className="h-4 w-4" />
-                    <span>Create Space</span>
-                  </button>
-                  <button
-                    onClick={() => setShowBartenderChat(true)}
-                    className="flex items-center space-x-2 bg-gradient-to-r from-coffee-medium to-coffee-light text-text-inverse px-6 py-2 rounded-lg font-medium hover:from-coffee-medium/90 hover:to-coffee-light/90 transition-all transform hover:scale-105"
-                  >
-                    <Coffee className="h-4 w-4" />
-                    <span>Connect with Bartender</span>
-                  </button>
-                  {/* Focus Room Button */}
-                  <button
-                    onClick={() => navigate('/focusroom')}
-                    className="flex items-center space-x-2 bg-gradient-to-r from-coffee-dark to-coffee-medium text-text-inverse px-6 py-2 rounded-lg font-medium hover:from-coffee-dark/90 hover:to-coffee-medium/90 transition-all transform hover:scale-105"
-                  >
-                    <Clock className="h-4 w-4" />
-                    <span>Focus Work in Pomodoro</span>
-                  </button>
                 </div>
               </div>
 
-              {/* Spaces Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {/* Actions Bar - Mobile Optimized */}
+              <div className="mb-8">
+                <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+                  <button
+                    onClick={() => setShowCreateModal(true)}
+                    className="flex items-center justify-center space-x-2 bg-gradient-to-r from-orange-accent to-golden-accent text-text-inverse px-6 py-3 rounded-xl font-medium hover:from-orange-accent/90 hover:to-golden-accent/90 transition-all transform hover:scale-105 shadow-lg"
+                    style={{ minHeight: '52px' }}
+                  >
+                    <Plus className="h-5 w-5" />
+                    <span>Create New Space</span>
+                  </button>
+                  
+                  <div className="grid grid-cols-2 gap-3 sm:flex sm:gap-4">
+                    <button
+                      onClick={() => setShowBartenderChat(true)}
+                      className="flex items-center justify-center space-x-2 bg-gradient-to-r from-coffee-medium to-coffee-light text-text-inverse px-4 sm:px-6 py-3 rounded-xl font-medium hover:from-coffee-medium/90 hover:to-coffee-light/90 transition-all transform hover:scale-105 shadow-lg"
+                      style={{ minHeight: '52px' }}
+                    >
+                      <Coffee className="h-4 w-4 sm:h-5 sm:w-5" />
+                      <span className="text-sm sm:text-base">AI Bartender</span>
+                    </button>
+                    <button
+                      onClick={() => navigate('/focusroom')}
+                      className="flex items-center justify-center space-x-2 bg-gradient-to-r from-coffee-dark to-coffee-medium text-text-inverse px-4 sm:px-6 py-3 rounded-xl font-medium hover:from-coffee-dark/90 hover:to-coffee-medium/90 transition-all transform hover:scale-105 shadow-lg"
+                      style={{ minHeight: '52px' }}
+                    >
+                      <Clock className="h-4 w-4 sm:h-5 sm:w-5" />
+                      <span className="text-sm sm:text-base">Focus Room</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Spaces Grid - Mobile Optimized */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
                 {filteredCafes.length === 0 ? (
-                  <div className="col-span-full text-center py-12">
-                    <Coffee className="h-12 w-12 text-text-muted mx-auto mb-4" />
-                    <h3 className="text-lg font-medium text-text-secondary mb-2">
-                      {searchTerm ? 'No spaces found' : 'No spaces yet'}
-                    </h3>
-                    <p className="text-text-muted">
-                      {searchTerm 
-                        ? 'Try adjusting your search terms'
-                        : 'Be the first to create a space and start the conversation!'
-                      }
-                    </p>
+                  <div className="col-span-full text-center py-12 px-4">
+                    <div className="bg-cream-primary rounded-2xl p-8 shadow-lg border border-cream-tertiary">
+                      <Coffee className="h-16 w-16 text-text-muted mx-auto mb-6" />
+                      <h3 className="text-xl font-semibold text-text-secondary mb-3">
+                        {searchTerm ? 'No spaces found' : 'No spaces yet'}
+                      </h3>
+                      <p className="text-text-muted mb-6 max-w-md mx-auto leading-relaxed">
+                        {searchTerm 
+                          ? 'Try adjusting your search terms or browse all available spaces'
+                          : 'Be the first to create a space and start the conversation!'
+                        }
+                      </p>
+                      {!searchTerm && (
+                        <button
+                          onClick={() => setShowCreateModal(true)}
+                          className="bg-gradient-to-r from-orange-accent to-golden-accent text-text-inverse px-6 py-3 rounded-xl font-medium hover:from-orange-accent/90 hover:to-golden-accent/90 transition-all transform hover:scale-105 shadow-lg"
+                          style={{ minHeight: '48px' }}
+                        >
+                          Create First Space
+                        </button>
+                      )}
+                    </div>
                   </div>
                 ) : (
                   filteredCafes.map((cafe) => (
@@ -594,6 +640,23 @@ function App() {
           isOpen={showInfoPanel}
           onClose={() => setShowInfoPanel(false)}
         />
+
+        {/* Mobile Navigation Drawer */}
+        {user && (
+          <MobileNavDrawer
+            isOpen={showMobileNav}
+            onClose={() => setShowMobileNav(false)}
+            user={user}
+            currentView={currentView}
+            onHomeClick={() => setCurrentView('home')}
+            onBrowseClick={() => setCurrentView('browse')}
+            onFocusRoomClick={() => navigate('/focusroom')}
+            onBartenderClick={() => setShowBartenderChat(true)}
+            onProfileClick={() => setShowUserProfile(true)}
+            onInfoClick={() => setShowInfoPanel(true)}
+            onSignOut={handleSignOut}
+          />
+        )}
       </div>
     </>
   );

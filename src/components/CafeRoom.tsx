@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabase';
 import { Cafe, User as UserType, CafeMember } from '../types';
 import Chat from './Chat';
 import OrderPanel from './OrderPanel';
+import BottomSheet from './BottomSheet';
 import { checkRateLimit } from '../lib/rateLimiter';
 
 interface CafeRoomProps {
@@ -15,6 +16,7 @@ interface CafeRoomProps {
 const CafeRoom = ({ cafe, currentUser, onLeave }: CafeRoomProps) => {
   const [members, setMembers] = useState<CafeMember[]>([]);
   const [activeTab, setActiveTab] = useState<'chat' | 'orders'>('chat');
+  const [showMemberList, setShowMemberList] = useState(false);
 
   useEffect(() => {
     joinCafe();
@@ -126,56 +128,76 @@ const CafeRoom = ({ cafe, currentUser, onLeave }: CafeRoomProps) => {
 
   return (
     <div className="h-screen flex flex-col bg-warm-white">
-      {/* Header */}
-      <div className="bg-cream-primary shadow-sm border-b border-cream-tertiary p-4">
+      {/* Header - Mobile Responsive */}
+      <div className="bg-cream-primary shadow-sm border-b border-cream-tertiary p-3 md:p-4">
         <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-3 flex-1 min-w-0">
             <button
               onClick={onLeave}
-              className="p-2 hover:bg-cream-secondary rounded-full transition-colors"
+              className="p-2 hover:bg-cream-secondary rounded-full transition-colors flex-shrink-0"
+              style={{ minHeight: '44px', minWidth: '44px' }}
             >
               <ArrowLeft className="h-5 w-5 text-text-secondary" />
             </button>
-            <div>
-              <h1 className="text-xl font-bold text-text-primary">{cafe.name}</h1>
-              <p className="text-sm text-text-secondary">{cafe.description}</p>
+            <div className="flex-1 min-w-0">
+              <h1 className="text-lg md:text-xl font-bold text-text-primary truncate">{cafe.name}</h1>
+              <p className="text-sm text-text-secondary truncate hidden sm:block">{cafe.description}</p>
             </div>
           </div>
           
-          <div className="flex items-center space-x-4">
-            <div className="flex items-center space-x-2 text-sm text-text-secondary">
+          <div className="flex items-center space-x-2 md:space-x-4 flex-shrink-0">
+            {/* Mobile Members Button */}
+            <button
+              onClick={() => setShowMemberList(true)}
+              className="lg:hidden flex items-center space-x-2 text-sm text-text-secondary hover:text-text-primary bg-cream-secondary hover:bg-cream-tertiary px-3 py-2 rounded-lg transition-colors"
+              style={{ minHeight: '44px' }}
+            >
+              <Users className="h-4 w-4" />
+              <span className="hidden sm:inline">{members.length} online</span>
+              <span className="sm:hidden">{members.length}</span>
+            </button>
+            
+            {/* Desktop Members Display */}
+            <div className="hidden lg:flex items-center space-x-2 text-sm text-text-secondary">
               <Users className="h-4 w-4" />
               <span>{members.length} online</span>
             </div>
+            
             {cafe.host_id === currentUser.id && (
-              <button className="p-2 hover:bg-cream-secondary rounded-full transition-colors">
+              <button 
+                className="p-2 hover:bg-cream-secondary rounded-full transition-colors"
+                style={{ minHeight: '44px', minWidth: '44px' }}
+              >
                 <Settings className="h-5 w-5 text-text-secondary" />
               </button>
             )}
           </div>
         </div>
 
-        {/* Tab Navigation */}
+        {/* Tab Navigation - Mobile Optimized */}
         <div className="flex space-x-1 mt-4 bg-cream-secondary rounded-lg p-1">
           <button
             onClick={() => setActiveTab('chat')}
-            className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all ${
+            className={`flex-1 py-3 px-4 rounded-md text-sm font-medium transition-all ${
               activeTab === 'chat'
                 ? 'bg-warm-white text-text-primary shadow-sm'
                 : 'text-text-secondary hover:text-text-primary'
             }`}
+            style={{ minHeight: '48px' }}
           >
             Chat
           </button>
           <button
             onClick={() => setActiveTab('orders')}
-            className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all ${
+            className={`flex-1 py-3 px-4 rounded-md text-sm font-medium transition-all ${
               activeTab === 'orders'
                 ? 'bg-warm-white text-text-primary shadow-sm'
                 : 'text-text-secondary hover:text-text-primary'
             }`}
+            style={{ minHeight: '48px' }}
           >
-            Menu & Orders
+            <span className="hidden sm:inline">Menu & Orders</span>
+            <span className="sm:hidden">Orders</span>
           </button>
         </div>
       </div>
@@ -219,6 +241,42 @@ const CafeRoom = ({ cafe, currentUser, onLeave }: CafeRoomProps) => {
           </div>
         </div>
       </div>
+
+      {/* Mobile Member List Bottom Sheet */}
+      <BottomSheet
+        isOpen={showMemberList}
+        onClose={() => setShowMemberList(false)}
+        title={`Members (${members.length})`}
+      >
+        <div className="space-y-3">
+          {members.map((member) => (
+            <div
+              key={member.id}
+              className="flex items-center space-x-3 p-3 rounded-lg hover:bg-cream-secondary transition-colors"
+              style={{ minHeight: '64px' }}
+            >
+              <div className="w-10 h-10 bg-gradient-to-br from-orange-accent to-golden-accent rounded-full flex items-center justify-center text-text-inverse text-sm font-medium flex-shrink-0">
+                {member.user?.name?.charAt(0).toUpperCase() || '?'}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-base font-medium text-text-primary truncate">
+                  {member.user?.name || 'Anonymous'}
+                </p>
+                {member.user_id === cafe.host_id && (
+                  <p className="text-sm text-orange-accent">Host</p>
+                )}
+              </div>
+              <div className="w-3 h-3 bg-green-500 rounded-full flex-shrink-0"></div>
+            </div>
+          ))}
+          {members.length === 0 && (
+            <div className="text-center py-8 text-text-muted">
+              <Users className="h-12 w-12 mx-auto mb-2" />
+              <p>No members online</p>
+            </div>
+          )}
+        </div>
+      </BottomSheet>
     </div>
   );
 };

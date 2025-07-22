@@ -100,7 +100,7 @@ const HomePage = ({ user, onCreateCafe, onBrowseCafes, onSelectCafe, onOpenFocus
         )}
 
         {/* Quick Stats Grid */}
-        <div className="grid grid-cols-2 lg:grid-cols-6 gap-4 mb-8">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 md:gap-4 mb-8">
           <QuickStatsCard
             title="Cafés Visited"
             value={stats.totalCafesVisited}
@@ -144,14 +144,15 @@ const HomePage = ({ user, onCreateCafe, onBrowseCafes, onSelectCafe, onOpenFocus
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.2 }}
-          className="bg-warm-white rounded-2xl p-6 shadow-lg border border-cream-tertiary mb-8"
+          className="bg-warm-white rounded-2xl p-4 md:p-6 shadow-lg border border-cream-tertiary mb-8"
         >
           <h2 className="text-xl font-semibold text-text-primary mb-4">Quick Actions</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
             
             <button
               onClick={onCreateCafe}
               className="flex items-center space-x-3 p-4 bg-gradient-to-r from-orange-accent to-golden-accent text-text-inverse rounded-xl hover:shadow-lg transition-all transform hover:scale-105"
+              style={{ minHeight: '72px' }}
             >
               <div className="p-2 bg-white/20 rounded-lg">
                 <Plus className="h-5 w-5" />
@@ -165,6 +166,7 @@ const HomePage = ({ user, onCreateCafe, onBrowseCafes, onSelectCafe, onOpenFocus
             <button
               onClick={onBrowseCafes}
               className="flex items-center space-x-3 p-4 bg-gradient-to-r from-coffee-medium to-coffee-light text-text-inverse rounded-xl hover:shadow-lg transition-all transform hover:scale-105"
+              style={{ minHeight: '72px' }}
             >
               <div className="p-2 bg-white/20 rounded-lg">
                 <Coffee className="h-5 w-5" />
@@ -178,6 +180,7 @@ const HomePage = ({ user, onCreateCafe, onBrowseCafes, onSelectCafe, onOpenFocus
             <button
               onClick={onOpenFocusRoom}
               className="flex items-center space-x-3 p-4 bg-gradient-to-r from-orange-accent to-golden-accent text-text-inverse rounded-xl hover:shadow-lg transition-all transform hover:scale-105"
+              style={{ minHeight: '72px' }}
             >
               <div className="p-2 bg-white/20 rounded-lg">
                 <Clock className="h-5 w-5" />
@@ -191,6 +194,7 @@ const HomePage = ({ user, onCreateCafe, onBrowseCafes, onSelectCafe, onOpenFocus
             <button
               onClick={onOpenBartenderChat}
               className="flex items-center space-x-3 p-4 bg-gradient-to-r from-coffee-medium to-coffee-light text-text-inverse rounded-xl hover:shadow-lg transition-all transform hover:scale-105"
+              style={{ minHeight: '72px' }}
             >
               <div className="p-2 bg-white/20 rounded-lg">
                 <Bot className="h-5 w-5" />
@@ -205,13 +209,14 @@ const HomePage = ({ user, onCreateCafe, onBrowseCafes, onSelectCafe, onOpenFocus
               <button
                 onClick={() => handleCafeClick(recentCafes[0])}
                 className="flex items-center space-x-3 p-4 bg-gradient-to-r from-coffee-dark to-coffee-medium text-text-inverse rounded-xl hover:shadow-lg transition-all transform hover:scale-105"
+                style={{ minHeight: '72px' }}
               >
                 <div className="p-2 bg-white/20 rounded-lg">
                   <ArrowRight className="h-5 w-5" />
                 </div>
                 <div className="text-left">
                   <h3 className="font-medium">Continue Last Session</h3>
-                  <p className="text-sm opacity-90 truncate max-w-[150px]">
+                  <p className="text-sm opacity-90 truncate max-w-[120px] sm:max-w-[150px]">
                     Return to {recentCafes[0].name}
                   </p>
                 </div>
@@ -225,7 +230,7 @@ const HomePage = ({ user, onCreateCafe, onBrowseCafes, onSelectCafe, onOpenFocus
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.4 }}
-          className="bg-warm-white rounded-2xl p-6 shadow-lg border border-cream-tertiary"
+          className="bg-warm-white rounded-2xl p-4 md:p-6 shadow-lg border border-cream-tertiary"
         >
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-semibold text-text-primary">Recent Cafés</h2>
@@ -233,6 +238,7 @@ const HomePage = ({ user, onCreateCafe, onBrowseCafes, onSelectCafe, onOpenFocus
               <button
                 onClick={onBrowseCafes}
                 className="text-orange-accent hover:text-orange-accent/80 text-sm font-medium transition-colors"
+                style={{ minHeight: '44px' }}
               >
                 View All
               </button>
@@ -251,6 +257,7 @@ const HomePage = ({ user, onCreateCafe, onBrowseCafes, onSelectCafe, onOpenFocus
               <button
                 onClick={onBrowseCafes}
                 className="bg-orange-accent text-text-inverse px-6 py-2 rounded-lg hover:bg-orange-accent/90 transition-colors"
+                style={{ minHeight: '44px' }}
               >
                 Browse Cafés
               </button>
