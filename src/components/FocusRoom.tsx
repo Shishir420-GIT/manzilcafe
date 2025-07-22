@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Play, Pause, SkipBack, SkipForward, ArrowLeft } from 'lucide-react';
 import GlitterParticles from './shared/GlitterParticles';
 import { useNavigate } from 'react-router-dom';
@@ -314,61 +314,192 @@ const FocusRoom = () => {
     <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-coffee-dark via-coffee-medium to-orange-accent relative z-0">
       <GlitterParticles />
       
-      {/* Back Button */}
-      <div className="absolute top-6 left-6 z-20">
-        <button
-          onClick={() => navigate('/')}
-          className="flex items-center space-x-2 text-text-inverse/80 hover:text-text-inverse bg-black/30 px-4 py-2 rounded-full shadow transition"
-        >
-          <ArrowLeft className="h-5 w-5" />
-          <span>Back</span>
-        </button>
+      {/* Header - Mobile Responsive */}
+      <div className="absolute top-0 left-0 right-0 z-20 p-4 md:p-6">
+        <div className="flex items-start justify-between">
+          {/* Back Button */}
+          <button
+            onClick={() => navigate('/')}
+            className="flex items-center space-x-2 text-text-inverse/80 hover:text-text-inverse bg-black/30 px-3 py-2 md:px-4 md:py-2 rounded-full shadow transition"
+            style={{ minHeight: '44px' }}
+          >
+            <ArrowLeft className="h-5 w-5" />
+            <span className="hidden sm:inline">Back</span>
+          </button>
+
+          {/* Hidden YouTube Player */}
+          <div style={{ position: 'absolute', left: '-9999px', width: 0, height: 0 }}>
+            <div id="youtube-player" />
+          </div>
+
+          {/* Desktop Music Player - Hidden on Mobile */}
+          <div className="hidden lg:block bg-warm-white rounded-2xl shadow-2xl p-4 max-w-sm">
+            <div className="flex flex-col items-center">
+              {/* Thumbnail */}
+              <div className="w-20 h-20 rounded-xl overflow-hidden mb-3 shadow-md">
+                <img
+                  src={getThumbnail(curatedTracks[currentTrack].id)}
+                  alt={curatedTracks[currentTrack].title}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+
+              {/* Title & Artist */}
+              <div className="text-center mb-3">
+                <div className="font-bold text-sm text-text-primary line-clamp-2 mb-1">
+                  {curatedTracks[currentTrack].title}
+                </div>
+                <div className="text-text-secondary text-xs">
+                  {curatedTracks[currentTrack].artist}
+                </div>
+              </div>
+
+              {/* Error Display */}
+              {playerError && (
+                <div className="text-error text-xs text-center mb-2 p-2 bg-red-50 rounded">
+                  {playerError}
+                </div>
+              )}
+
+              {/* Loading State */}
+              {!apiLoaded && (
+                <div className="text-text-muted text-xs text-center mb-2 p-2 bg-cream-secondary rounded">
+                  Loading YouTube API...
+                </div>
+              )}
+
+              {/* Track Indicators */}
+              <div className="flex items-center space-x-1 mb-3">
+                {curatedTracks.map((_, index) => (
+                  <div
+                    key={index}
+                    className={`w-1.5 h-1.5 rounded-full ${
+                      index === currentTrack ? 'bg-orange-accent' : 'bg-cream-tertiary'
+                    }`}
+                  />
+                ))}
+              </div>
+
+              {/* Controls */}
+              <div className="flex items-center justify-center space-x-3">
+                <button
+                  onClick={() => handleTrackChange('prev')}
+                  className="p-2 bg-cream-secondary rounded-full shadow-sm text-text-secondary hover:bg-cream-tertiary transition-all"
+                  style={{ minHeight: '44px', minWidth: '44px' }}
+                >
+                  <SkipBack className="h-4 w-4" />
+                </button>
+                <button
+                  onClick={handlePlayPause}
+                  disabled={!isPlayerReady || !apiLoaded}
+                  className="p-3 bg-orange-accent rounded-full shadow-lg text-text-inverse hover:bg-orange-accent/90 transition-all disabled:opacity-50"
+                  style={{ minHeight: '48px', minWidth: '48px' }}
+                >
+                  {isPlaying ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5" />}
+                </button>
+                <button
+                  onClick={() => handleTrackChange('next')}
+                  className="p-2 bg-cream-secondary rounded-full shadow-sm text-text-secondary hover:bg-cream-tertiary transition-all"
+                  style={{ minHeight: '44px', minWidth: '44px' }}
+                >
+                  <SkipForward className="h-4 w-4" />
+                </button>
+              </div>
+
+              {/* Playing Status */}
+              {isPlaying && (
+                <div className="mt-2 text-center">
+                  <div className="text-orange-accent text-xs font-medium">Now Playing</div>
+                  <div className="flex items-center justify-center space-x-1 mt-1">
+                    {[...Array(5)].map((_, i) => (
+                      <div
+                        key={i}
+                        className="w-0.5 h-2 bg-orange-accent rounded-full animate-pulse"
+                        style={{ animationDelay: `${i * 0.1}s` }}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Minimal Music Player for Mobile/Tablet - Top Right */}
+          <div className="lg:hidden bg-warm-white/90 backdrop-blur-sm rounded-xl shadow-lg p-2 flex items-center space-x-2">
+            {/* Small thumbnail */}
+            <div className="w-10 h-10 rounded-lg overflow-hidden shadow-sm flex-shrink-0">
+              <img
+                src={getThumbnail(curatedTracks[currentTrack].id)}
+                alt={curatedTracks[currentTrack].title}
+                className="w-full h-full object-cover"
+              />
+            </div>
+            
+            {/* Controls only */}
+            <div className="flex items-center space-x-1">
+              <button
+                onClick={() => handleTrackChange('prev')}
+                className="p-1.5 bg-cream-secondary rounded-full shadow-sm text-text-secondary hover:bg-cream-tertiary transition-all"
+                style={{ minHeight: '36px', minWidth: '36px' }}
+              >
+                <SkipBack className="h-3 w-3" />
+              </button>
+              <button
+                onClick={handlePlayPause}
+                disabled={!isPlayerReady || !apiLoaded}
+                className="p-2 bg-orange-accent rounded-full shadow-md text-text-inverse hover:bg-orange-accent/90 transition-all disabled:opacity-50"
+                style={{ minHeight: '40px', minWidth: '40px' }}
+              >
+                {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
+              </button>
+              <button
+                onClick={() => handleTrackChange('next')}
+                className="p-1.5 bg-cream-secondary rounded-full shadow-sm text-text-secondary hover:bg-cream-tertiary transition-all"
+                style={{ minHeight: '36px', minWidth: '36px' }}
+              >
+                <SkipForward className="h-3 w-3" />
+              </button>
+            </div>
+
+            {/* Error/Loading indicators */}
+            {playerError && (
+              <div className="text-error text-xs px-2 py-1 bg-red-100 rounded text-center">
+                Error
+              </div>
+            )}
+            {!apiLoaded && (
+              <div className="text-text-muted text-xs px-2 py-1 bg-cream-secondary rounded text-center">
+                Loading...
+              </div>
+            )}
+          </div>
+        </div>
       </div>
 
-      {/* Music Player - Top Right */}
-      <div className="absolute top-6 right-6 z-20 w-80 bg-warm-white rounded-2xl shadow-2xl p-4">
-        {/* Hidden YouTube Player */}
-        <div style={{ position: 'absolute', left: '-9999px', width: 0, height: 0 }}>
-          <div id="youtube-player" />
-        </div>
-
-        {/* Player Content */}
-        <div className="flex flex-col items-center">
-          {/* Thumbnail */}
-          <div className="w-20 h-20 rounded-xl overflow-hidden mb-3 shadow-md">
-            <img
-              src={getThumbnail(curatedTracks[currentTrack].id)}
-              alt={curatedTracks[currentTrack].title}
-              className="w-full h-full object-cover"
-            />
-          </div>
-
-          {/* Title & Artist */}
-          <div className="text-center mb-3">
-            <div className="font-bold text-sm text-text-primary line-clamp-2 mb-1">
-              {curatedTracks[currentTrack].title}
+      {/* Mobile Music Player - Bottom Sheet Style */}
+      <div className="lg:hidden fixed bottom-4 left-4 right-4 z-30 bg-warm-white rounded-2xl shadow-2xl p-4 border border-cream-tertiary">
+        <div className="flex items-center justify-between">
+          {/* Track info */}
+          <div className="flex items-center space-x-3 flex-1 min-w-0">
+            <div className="w-12 h-12 rounded-xl overflow-hidden shadow-md flex-shrink-0">
+              <img
+                src={getThumbnail(curatedTracks[currentTrack].id)}
+                alt={curatedTracks[currentTrack].title}
+                className="w-full h-full object-cover"
+              />
             </div>
-            <div className="text-text-secondary text-xs">
-              {curatedTracks[currentTrack].artist}
+            <div className="flex-1 min-w-0">
+              <div className="font-bold text-sm text-text-primary truncate">
+                {curatedTracks[currentTrack].title}
+              </div>
+              <div className="text-text-secondary text-xs truncate">
+                {curatedTracks[currentTrack].artist}
+              </div>
             </div>
           </div>
 
-          {/* Error Display */}
-          {playerError && (
-            <div className="text-error text-xs text-center mb-2 p-2 bg-red-50 rounded">
-              {playerError}
-            </div>
-          )}
-
-          {/* Loading State */}
-          {!apiLoaded && (
-            <div className="text-text-muted text-xs text-center mb-2 p-2 bg-cream-secondary rounded">
-              Loading YouTube API...
-            </div>
-          )}
-
-          {/* Track Indicators */}
-          <div className="flex items-center space-x-1 mb-3">
+          {/* Track indicators */}
+          <div className="flex items-center space-x-1 mx-4">
             {curatedTracks.map((_, index) => (
               <div
                 key={index}
@@ -379,61 +510,35 @@ const FocusRoom = () => {
             ))}
           </div>
 
-          {/* Controls */}
-          <div className="flex items-center justify-center space-x-3">
-            <button
-              onClick={() => handleTrackChange('prev')}
-              className="p-2 bg-cream-secondary rounded-full shadow-sm text-text-secondary hover:bg-cream-tertiary transition-all"
-            >
-              <SkipBack className="h-4 w-4" />
-            </button>
-            <button
-              onClick={handlePlayPause}
-              disabled={!isPlayerReady || !apiLoaded}
-              className="p-3 bg-orange-accent rounded-full shadow-lg text-text-inverse hover:bg-orange-accent/90 transition-all disabled:opacity-50"
-            >
-              {isPlaying ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5" />}
-            </button>
-            <button
-              onClick={() => handleTrackChange('next')}
-              className="p-2 bg-cream-secondary rounded-full shadow-sm text-text-secondary hover:bg-cream-tertiary transition-all"
-            >
-              <SkipForward className="h-4 w-4" />
-            </button>
-          </div>
-
-          {/* Playing Status */}
+          {/* Playing status indicator */}
           {isPlaying && (
-            <div className="mt-2 text-center">
-              <div className="text-orange-accent text-xs font-medium">Now Playing</div>
-              <div className="flex items-center justify-center space-x-1 mt-1">
-                {[...Array(5)].map((_, i) => (
-                  <div
-                    key={i}
-                    className="w-0.5 h-2 bg-orange-accent rounded-full animate-pulse"
-                    style={{ animationDelay: `${i * 0.1}s` }}
-                  />
-                ))}
-              </div>
+            <div className="flex items-center space-x-1">
+              {[...Array(3)].map((_, i) => (
+                <div
+                  key={i}
+                  className="w-0.5 h-3 bg-orange-accent rounded-full animate-pulse"
+                  style={{ animationDelay: `${i * 0.1}s` }}
+                />
+              ))}
             </div>
           )}
         </div>
       </div>
 
-      {/* Timer UI */}
-      <div className="mb-8 flex flex-col items-center z-10">
-        <div className="w-64 h-64 rounded-full border-8 border-warm-white/20 flex items-center justify-center relative mb-4">
+      {/* Timer UI - Mobile Optimized with bottom padding for mobile player */}
+      <div className="mb-8 lg:mb-8 pb-24 lg:pb-8 flex flex-col items-center z-10 px-4">
+        <div className="w-56 h-56 sm:w-64 sm:h-64 md:w-72 md:h-72 rounded-full border-4 sm:border-6 md:border-8 border-warm-white/20 flex items-center justify-center relative mb-6">
           <div className="text-center">
-            <div className="text-4xl md:text-5xl font-mono font-bold text-text-inverse mb-2">
+            <div className="text-4xl sm:text-5xl md:text-6xl font-mono font-bold text-text-inverse mb-2">
               {isBreak ? formatTime(breakTimeLeft) : formatTime(timeLeft)}
             </div>
-            <div className="text-text-inverse/60 text-sm">
+            <div className="text-text-inverse/60 text-sm sm:text-base md:text-lg">
               {isActive ? 'Focus Time' : isBreak ? 'Break Time' : 'Ready to Focus'}
             </div>
           </div>
         </div>
         
-        <div className="flex items-center space-x-6">
+        <div className="flex items-center justify-center space-x-4 md:space-x-6">
           {!isActive ? (
             <button
               onClick={() => {
@@ -453,13 +558,14 @@ const FocusRoom = () => {
                 }
               }}
               disabled={isBreak && breakTimeLeft > 0}
-              className="flex items-center space-x-2 bg-gradient-to-r from-orange-accent to-golden-accent text-text-inverse px-8 py-4 rounded-full font-semibold hover:from-orange-accent/90 hover:to-golden-accent/90 transition-all transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex items-center space-x-3 bg-gradient-to-r from-orange-accent to-golden-accent text-text-inverse px-8 sm:px-10 py-4 sm:py-5 rounded-full font-semibold hover:from-orange-accent/90 hover:to-golden-accent/90 transition-all transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed shadow-xl"
+              style={{ minHeight: '56px', minWidth: '160px' }}
             >
-              <Play className="h-5 w-5" />
-              <span>Start Focus</span>
+              <Play className="h-6 w-6 sm:h-7 sm:w-7" />
+              <span className="text-base sm:text-lg font-bold">Start Focus</span>
             </button>
           ) : (
-            <div className="flex space-x-4">
+            <div className="flex space-x-4 sm:space-x-6">
               <button
                 onClick={() => {
                   setIsActive(false);
@@ -471,17 +577,39 @@ const FocusRoom = () => {
                     }
                   }
                 }}
-                className="flex items-center space-x-2 bg-golden-accent text-text-inverse px-6 py-3 rounded-full font-semibold hover:bg-golden-accent/90 transition-all"
+                className="flex items-center space-x-3 bg-golden-accent text-text-inverse px-6 sm:px-8 py-4 rounded-full font-semibold hover:bg-golden-accent/90 transition-all shadow-lg"
+                style={{ minHeight: '56px', minWidth: '140px' }}
               >
-                <Pause className="h-5 w-5" />
-                <span>Pause</span>
+                <Pause className="h-6 w-6 sm:h-7 sm:w-7" />
+                <span className="text-base sm:text-lg font-bold">Pause</span>
+              </button>
+              <button
+                onClick={() => {
+                  setIsActive(false);
+                  setTimeLeft(25 * 60);
+                  setIsBreak(false);
+                  if (playerRef.current && isPlayerReady && apiLoaded) {
+                    try {
+                      playerRef.current.pauseVideo();
+                    } catch (error) {
+                      console.error('Error pausing video:', error);
+                    }
+                  }
+                }}
+                className="flex items-center space-x-2 bg-red-500 text-text-inverse px-4 sm:px-6 py-4 rounded-full font-semibold hover:bg-red-600 transition-all shadow-lg"
+                style={{ minHeight: '56px' }}
+              >
+                <span className="text-base sm:text-lg font-bold">Reset</span>
               </button>
             </div>
           )}
         </div>
         
-        <div className="text-text-inverse/80 text-sm mt-4">
-          Sessions completed: {sessionsCompleted}
+        <div className="text-text-inverse/80 text-sm sm:text-base mt-6 text-center">
+          <div className="bg-black/20 backdrop-blur-sm rounded-full px-4 py-2 inline-block">
+            <span className="font-medium">Sessions completed: </span>
+            <span className="font-bold text-golden-accent">{sessionsCompleted}</span>
+          </div>
         </div>
       </div>
     </div>
