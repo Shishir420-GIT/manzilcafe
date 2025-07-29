@@ -1,8 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from './lib/supabase';
 import { User, Cafe } from './types';
-import { Coffee, Plus, LogOut, Search, Users, User as UserIcon, Info, Clock, Menu } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { Coffee, Plus, LogOut, Search, Info, Clock, Menu } from 'lucide-react';
 import CursorTrail from './components/CursorTrail';
 import AuthModal from './components/AuthModal';
 import CreateCafeModal from './components/CreateCafeModal';
@@ -14,6 +13,7 @@ import InfoPanel from './components/InfoPanel';
 import ProfileCompletionReminder from './components/ProfileCompletionReminder';
 import ProfileEditModal from './components/ProfileEditModal';
 import HomePage from './components/HomePage';
+import LandingPage from './components/LandingPage';
 import { useNavigate } from 'react-router-dom';
 import FocusRoom from './components/FocusRoom';
 import MobileNavDrawer from './components/MobileNavDrawer';
@@ -285,15 +285,16 @@ function App() {
   // Add router for /focusroom
   const isFocusRoom = window.location.pathname === '/focusroom';
   if (isFocusRoom && user) {
-    return <FocusRoom currentUser={user} onExit={() => navigate('/')} />;
+    return <FocusRoom />;
   }
 
   return (
     <>
       <CursorTrail />
       <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50">
-        {/* Header */}
-        <header className="bg-coffee-dark backdrop-blur-sm shadow-sm border-b border-coffee-medium/50 sticky top-0 z-40">
+        {/* Header - Only show for authenticated users */}
+        {user && (
+          <header className="bg-coffee-dark backdrop-blur-sm shadow-sm border-b border-coffee-medium/50 sticky top-0 z-40">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex items-center justify-between h-16">
               <div className="flex items-center space-x-6">
@@ -410,6 +411,7 @@ function App() {
             </div>
           </div>
         </header>
+        )}
 
         {/* Main Content */}
         {user ? (
@@ -511,77 +513,7 @@ function App() {
             </main>
           )
         ) : (
-          <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 min-h-screen">
-            <div className="text-center py-20 bg-warm-white rounded-2xl shadow-lg mx-4">
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6 }}
-                className="max-w-3xl mx-auto"
-              >
-                <div className="mb-8">
-                  <div className="p-4 bg-gradient-to-br from-orange-accent to-golden-accent rounded-2xl shadow-2xl inline-block mb-6">
-                    <Coffee className="h-16 w-16 text-text-inverse" />
-                  </div>
-                  <h1 className="text-5xl font-bold text-text-primary mb-4">
-                    Welcome to <span className="text-orange-accent">Manziil Café</span>
-                  </h1>
-                  <p className="text-xl text-text-secondary mb-8">
-                    Create or join virtual spaces, chat with friends, order virtual treats, 
-                    and get recommendations from our AI bartender. Your cozy corner in the digital world.
-                  </p>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
-                  <motion.div
-                    whileHover={{ scale: 1.05 }}
-                    className="p-6 bg-cream-primary rounded-xl shadow-lg border border-cream-tertiary"
-                  >
-                    <div className="w-12 h-12 bg-orange-accent/20 rounded-lg flex items-center justify-center mb-4 mx-auto">
-                      <Coffee className="h-6 w-6 text-orange-accent" />
-                    </div>
-                    <h3 className="text-lg font-semibold text-text-primary mb-2">Virtual Spaces</h3>
-                    <p className="text-text-secondary text-sm">
-                      Create themed spaces and invite friends for cozy conversations
-                    </p>
-                  </motion.div>
-
-                  <motion.div
-                    whileHover={{ scale: 1.05 }}
-                    className="p-6 bg-cream-primary rounded-xl shadow-lg border border-cream-tertiary"
-                  >
-                    <div className="w-12 h-12 bg-coffee-medium/20 rounded-lg flex items-center justify-center mb-4 mx-auto">
-                      <Users className="h-6 w-6 text-coffee-medium" />
-                    </div>
-                    <h3 className="text-lg font-semibold text-text-primary mb-2">Real-time Chat</h3>
-                    <p className="text-text-secondary text-sm">
-                      Engage in live conversations with fellow space visitors
-                    </p>
-                  </motion.div>
-
-                  <motion.div
-                    whileHover={{ scale: 1.05 }}
-                    className="p-6 bg-cream-primary rounded-xl shadow-lg border border-cream-tertiary"
-                  >
-                    <div className="w-12 h-12 bg-golden-accent/20 rounded-lg flex items-center justify-center mb-4 mx-auto">
-                      <Coffee className="h-6 w-6 text-golden-accent" />
-                    </div>
-                    <h3 className="text-lg font-semibold text-text-primary mb-2">AI Bartender</h3>
-                    <p className="text-text-secondary text-sm">
-                      Get personalized recommendations and assistance from our AI helper
-                    </p>
-                  </motion.div>
-                </div>
-
-                <button
-                  onClick={() => setShowAuthModal(true)}
-                  className="bg-gradient-to-r from-orange-accent to-golden-accent text-text-inverse px-8 py-4 rounded-xl font-semibold text-lg hover:from-orange-accent/90 hover:to-golden-accent/90 transition-all transform hover:scale-105 shadow-lg"
-                >
-                  Start Your VirtualCafe Journey
-                </button>
-              </motion.div>
-            </div>
-          </main>
+          <LandingPage onAuthClick={() => setShowAuthModal(true)} />
         )}
 
         {/* Modals */}
