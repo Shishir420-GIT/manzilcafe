@@ -75,6 +75,7 @@ const FocusRoom = () => {
   const [isBreak, setIsBreak] = useState(false);
   const [breakTimeLeft, setBreakTimeLeft] = useState(5 * 60);
   const [sessionsCompleted, setSessionsCompleted] = useState(0);
+  const [isPaused, setIsPaused] = useState(false);
 
   // YouTube player state
   const [currentTrack, setCurrentTrack] = useState(0);
@@ -554,7 +555,7 @@ const FocusRoom = () => {
               {isBreak ? formatTime(breakTimeLeft) : formatTime(timeLeft)}
             </div>
             <div className="text-text-inverse/60 text-sm sm:text-base md:text-lg">
-              {isActive ? 'Focus Time' : isBreak ? 'Break Time' : 'Ready to Focus'}
+              {isActive ? 'Focus Time' : isPaused ? 'Paused' : isBreak ? 'Break Time' : 'Ready to Focus'}
             </div>
           </div>
         </div>
@@ -569,7 +570,11 @@ const FocusRoom = () => {
                 }
                 setIsActive(true);
                 setIsBreak(false);
-                setTimeLeft(25 * 60);
+                setIsPaused(false);
+                // Only reset time if not paused (new session)
+                if (!isPaused) {
+                  setTimeLeft(25 * 60);
+                }
                 if (isPlayerReady && playerRef.current && apiLoaded) {
                   try {
                     playerRef.current.playVideo();
@@ -583,13 +588,14 @@ const FocusRoom = () => {
               style={{ minHeight: '56px', minWidth: '160px' }}
             >
               <Play className="h-6 w-6 sm:h-7 sm:w-7" />
-              <span className="text-base sm:text-lg font-bold">Start Focus</span>
+              <span className="text-base sm:text-lg font-bold">{isPaused ? 'Resume' : 'Start Focus'}</span>
             </button>
           ) : (
             <div className="flex space-x-4 sm:space-x-6">
               <button
                 onClick={() => {
                   setIsActive(false);
+                  setIsPaused(true); // Mark as paused to preserve time
                   if (playerRef.current && isPlayerReady && apiLoaded) {
                     try {
                       playerRef.current.pauseVideo();
@@ -609,6 +615,7 @@ const FocusRoom = () => {
                   setIsActive(false);
                   setTimeLeft(25 * 60);
                   setIsBreak(false);
+                  setIsPaused(false); // Clear paused state on reset
                   if (playerRef.current && isPlayerReady && apiLoaded) {
                     try {
                       playerRef.current.pauseVideo();

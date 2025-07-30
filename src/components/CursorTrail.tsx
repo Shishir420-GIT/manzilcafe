@@ -1,5 +1,10 @@
 import { useEffect, useRef } from 'react';
 
+// React Refresh preamble
+if (typeof window !== 'undefined' && import.meta.hot) {
+  window.__vite_plugin_react_preamble_installed__ = true;
+}
+
 interface Particle {
   x: number;
   y: number;

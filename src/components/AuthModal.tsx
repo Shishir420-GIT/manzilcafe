@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { supabase } from '../lib/supabase';
-import { X, Coffee } from 'lucide-react';
+import { X, Coffee, Mail, CheckCircle } from 'lucide-react';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -12,9 +12,11 @@ const AuthModal = ({ isOpen, onClose, onSuccess }: AuthModalProps) => {
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [name, setName] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [showEmailVerification, setShowEmailVerification] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -28,7 +30,22 @@ const AuthModal = ({ isOpen, onClose, onSuccess }: AuthModalProps) => {
           password,
         });
         if (error) throw error;
+        onSuccess();
+        onClose();
       } else {
+        // Validate password confirmation
+        if (password !== confirmPassword) {
+          setError('Passwords do not match');
+          setLoading(false);
+          return;
+        }
+        
+        if (password.length < 6) {
+          setError('Password must be at least 6 characters long');
+          setLoading(false);
+          return;
+        }
+
         const { error } = await supabase.auth.signUp({
           email,
           password,
@@ -40,9 +57,10 @@ const AuthModal = ({ isOpen, onClose, onSuccess }: AuthModalProps) => {
           },
         });
         if (error) throw error;
+        
+        // Show email verification page instead of closing
+        setShowEmailVerification(true);
       }
-      onSuccess();
-      onClose();
     } catch (error: any) {
       setError(error.message);
     } finally {
@@ -105,6 +123,66 @@ const AuthModal = ({ isOpen, onClose, onSuccess }: AuthModalProps) => {
   };
 
   if (!isOpen) return null;
+
+  // Email Verification Screen
+  if (showEmailVerification) {
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div className="bg-warm-white rounded-2xl shadow-2xl w-full max-w-md relative overflow-hidden">
+          <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-orange-accent via-golden-accent to-orange-accent"></div>
+          
+          <div className="p-8 text-center">
+            <div className="flex justify-end mb-4">
+              <button
+                onClick={onClose}
+                className="p-2 hover:bg-cream-secondary rounded-full transition-colors"
+              >
+                <X className="h-5 w-5 text-text-muted" />
+              </button>
+            </div>
+
+            {/* Success Icon */}
+            <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
+              <CheckCircle className="w-10 h-10 text-green-600" />
+            </div>
+
+            <h2 className="text-2xl font-bold text-text-primary mb-4">
+              Check Your Email
+            </h2>
+            
+            <div className="mb-6">
+              <div className="flex items-center justify-center space-x-2 mb-4">
+                <Mail className="w-5 h-5 text-orange-accent" />
+                <span className="text-text-secondary text-sm">{email}</span>
+              </div>
+              
+              <p className="text-text-muted leading-relaxed">
+                We've sent a verification link to your email address. 
+                Please check your inbox and click the link to verify your account.
+              </p>
+            </div>
+
+            <div className="bg-cream-secondary rounded-lg p-4 mb-6">
+              <p className="text-text-secondary text-sm">
+                <strong>Can't find the email?</strong><br />
+                Check your spam folder or wait a few minutes for delivery.
+              </p>
+            </div>
+
+            <button
+              onClick={() => {
+                setShowEmailVerification(false);
+                onClose();
+              }}
+              className="w-full bg-gradient-to-r from-orange-accent to-golden-accent text-text-inverse py-3 px-4 rounded-lg font-medium hover:from-orange-accent/90 hover:to-golden-accent/90 transition-all"
+            >
+              Got it, thanks!
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
@@ -177,8 +255,32 @@ const AuthModal = ({ isOpen, onClose, onSuccess }: AuthModalProps) => {
                 className="w-full px-4 py-3 border border-cream-tertiary rounded-lg focus:ring-2 focus:ring-orange-accent focus:border-transparent transition-all bg-cream-primary"
                 placeholder="••••••••"
                 required
+                minLength={6}
               />
             </div>
+            
+            {!isLogin && (
+              <div>
+                <label className="block text-sm font-medium text-text-secondary mb-2">
+                  Confirm Password
+                </label>
+                <input
+                  type="password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-orange-accent focus:border-transparent transition-all bg-cream-primary ${
+                    confirmPassword && password !== confirmPassword 
+                      ? 'border-red-300 bg-red-50' 
+                      : 'border-cream-tertiary'
+                  }`}
+                  placeholder="••••••••"
+                  required={!isLogin}
+                />
+                {confirmPassword && password !== confirmPassword && (
+                  <p className="mt-1 text-sm text-red-600">Passwords do not match</p>
+                )}
+              </div>
+            )}
             
             <button
               type="submit"

@@ -53,6 +53,7 @@ const CafeRoom = ({ cafe, currentUser, onLeave }: CafeRoomProps) => {
             cafe_id: cafe.id,
             user_id: currentUser.id,
             status: 'active',
+            last_active: new Date().toISOString(),
           });
 
         if (error) throw error;
@@ -60,13 +61,41 @@ const CafeRoom = ({ cafe, currentUser, onLeave }: CafeRoomProps) => {
         // Update existing membership to active
         const { error } = await supabase
           .from('cafe_members')
-          .update({ status: 'active' })
+          .update({ 
+            status: 'active',
+            last_active: new Date().toISOString(),
+          })
+          .eq('cafe_id', cafe.id)
+          .eq('user_id', currentUser.id);
+
+        if (error) throw error;
+      } else if (existingMember) {
+        // Update last_active even if already active
+        const { error } = await supabase
+          .from('cafe_members')
+          .update({ 
+            last_active: new Date().toISOString(),
+          })
           .eq('cafe_id', cafe.id)
           .eq('user_id', currentUser.id);
 
         if (error) throw error;
       }
-      // If existingMember exists and status is already 'active', do nothing
+      
+      // Set up heartbeat to update last_active every 30 seconds
+      const heartbeat = setInterval(async () => {
+        await supabase
+          .from('cafe_members')
+          .update({ 
+            last_active: new Date().toISOString(),
+          })
+          .eq('cafe_id', cafe.id)
+          .eq('user_id', currentUser.id);
+      }, 30000);
+
+      // Store heartbeat in component (you'd need to clear this on unmount)
+      (window as any).cafeHeartbeat = heartbeat;
+      
     } catch (error) {
       console.error('Error joining space:', error);
     }
@@ -74,6 +103,12 @@ const CafeRoom = ({ cafe, currentUser, onLeave }: CafeRoomProps) => {
 
   const leaveCafe = async () => {
     try {
+      // Clear heartbeat
+      if ((window as any).cafeHeartbeat) {
+        clearInterval((window as any).cafeHeartbeat);
+        delete (window as any).cafeHeartbeat;
+      }
+      
       const { error } = await supabase
         .from('cafe_members')
         .update({ status: 'left' })
@@ -92,13 +127,25 @@ const CafeRoom = ({ cafe, currentUser, onLeave }: CafeRoomProps) => {
         .from('cafe_members')
         .select(`
           *,
-          user:users(id, name, avatar_url)
+          user:users(id, name, avatar_url),
+          last_active
         `)
         .eq('cafe_id', cafe.id)
         .eq('status', 'active');
 
       if (error) throw error;
-      setMembers(data || []);
+      
+      // Filter members who were active in last 5 minutes
+      const now = new Date();
+      const fiveMinutesAgo = new Date(now.getTime() - 5 * 60 * 1000);
+      
+      const activeMembers = (data || []).filter(member => {
+        if (!member.last_active) return false;
+        const lastActive = new Date(member.last_active);
+        return lastActive > fiveMinutesAgo;
+      });
+      
+      setMembers(activeMembers);
     } catch (error) {
       console.error('Error fetching members:', error);
     }

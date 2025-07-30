@@ -124,10 +124,27 @@ const MobileNavDrawer = ({
             {/* Header */}
             <div className="flex items-center justify-between p-6 border-b border-cream-tertiary">
               <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 bg-gradient-to-br from-orange-accent to-golden-accent rounded-full flex items-center justify-center">
-                  <span className="text-text-inverse font-semibold">
-                    {user.name.charAt(0).toUpperCase()}
-                  </span>
+                <div className="w-10 h-10 bg-gradient-to-br from-orange-accent to-golden-accent rounded-full flex items-center justify-center overflow-hidden">
+                  {user.avatar_url ? (
+                    <img
+                      src={user.avatar_url}
+                      alt={user.name}
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        // Fallback to initials if image fails to load
+                        const target = e.target as HTMLImageElement;
+                        target.style.display = 'none';
+                        const parent = target.parentElement;
+                        if (parent) {
+                          parent.innerHTML = `<span class="text-text-inverse font-semibold">${user.name.charAt(0).toUpperCase()}</span>`;
+                        }
+                      }}
+                    />
+                  ) : (
+                    <span className="text-text-inverse font-semibold">
+                      {user.name.charAt(0).toUpperCase()}
+                    </span>
+                  )}
                 </div>
                 <div>
                   <h3 className="font-semibold text-text-primary">{user.name}</h3>
