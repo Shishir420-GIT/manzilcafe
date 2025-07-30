@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { Users, Clock, Star } from 'lucide-react';
+import { Users, Clock, Star, ArrowRight } from 'lucide-react';
 import { Cafe } from '../types';
 
 interface CafeCardProps {
@@ -51,7 +51,7 @@ const CafeCard = ({ cafe, onClick }: CafeCardProps) => {
           {cafe.description}
         </p>
         
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between mb-4">
           <div className="flex items-center space-x-2 text-sm text-text-muted">
             <Clock className="h-4 w-4" />
             <span>Active now</span>
@@ -60,6 +60,19 @@ const CafeCard = ({ cafe, onClick }: CafeCardProps) => {
             {cafe.theme} theme
           </div>
         </div>
+        
+        <motion.button
+          onClick={(e) => {
+            e.stopPropagation();
+            onClick();
+          }}
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          className="w-full bg-gradient-to-r from-orange-accent to-golden-accent text-text-inverse py-3 px-4 rounded-lg font-medium hover:from-orange-accent/90 hover:to-golden-accent/90 transition-all flex items-center justify-center space-x-2 shadow-lg"
+        >
+          <span>Join Café</span>
+          <ArrowRight className="h-4 w-4" />
+        </motion.button>
       </div>
     </motion.div>
   );

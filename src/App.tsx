@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
 import { supabase } from './lib/supabase';
 import { User, Cafe } from './types';
-import { Coffee, Plus, LogOut, Search, Info, Clock, Menu } from 'lucide-react';
+import { Coffee, Plus, LogOut, Search, Info, Clock, Menu, AlertCircle, RefreshCw } from 'lucide-react';
 import CursorTrail from './components/CursorTrail';
 import AuthModal from './components/AuthModal';
 import CreateCafeModal from './components/CreateCafeModal';
@@ -31,6 +32,9 @@ function App() {
   const [showProfileEditModal, setShowProfileEditModal] = useState(false);
   const [currentView, setCurrentView] = useState<'home' | 'browse'>('home');
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [loadingStep, setLoadingStep] = useState<string>('Connecting...');
+  const [postAuthLoading, setPostAuthLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [showMobileNav, setShowMobileNav] = useState(false);
   const navigate = useNavigate();
@@ -136,44 +140,62 @@ function App() {
   };
 
   useEffect(() => {
+    let mounted = true;
+    
     const initializeApp = async () => {
+      if (!mounted) return;
+      
       try {
-        // Clean up URL on initial load if it has OAuth tokens
-        if (window.location.hash.includes('access_token')) {
-          // Let Supabase handle the OAuth callback first
-          setTimeout(() => {
-            window.history.replaceState({}, document.title, window.location.pathname);
-          }, 1000);
-        }
+        setError(null);
+        setLoadingStep('Connecting to server...');
         
         // Test Supabase connection
         try {
           await supabase.from('users').select('count').limit(1);
         } catch (testError) {
-          console.error('Supabase connection failed:', testError);
+          throw new Error('Unable to connect to the server. Please check your internet connection and try again.');
         }
         
+        if (!mounted) return;
+        
+        setLoadingStep('Checking authentication...');
         await checkUser();
+        
+        if (!mounted) return;
+        
+        setLoadingStep('Loading spaces...');
         await fetchCafes();
-      } catch (error) {
+        
+        if (!mounted) return;
+        
+        setLoadingStep('Ready!');
+      } catch (error: any) {
+        if (!mounted) return;
         console.error('Error initializing app:', error);
+        setError(error.message || 'An unexpected error occurred while loading the application.');
       } finally {
-        setLoading(false);
+        if (mounted) {
+          setLoading(false);
+        }
       }
     };
 
-    initializeApp();
+    // Only initialize if not already initialized
+    if (loading) {
+      initializeApp();
+    }
 
     // Listen for auth state changes (for OAuth callbacks)
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        if (!mounted) return;
+        
+        // Clean up URL after OAuth callback
+        if (window.location.hash.includes('access_token')) {
+          window.history.replaceState({}, document.title, window.location.pathname);
+        }
+        
         if (event === 'SIGNED_IN' && session?.user) {
-          // Clean up URL after OAuth callback
-          if (window.location.hash.includes('access_token')) {
-            // Replace current URL with clean version (removes hash parameters)
-            window.history.replaceState({}, document.title, window.location.pathname);
-          }
-          
           // User signed in via OAuth, check if profile exists
           const { data: userData, error } = await supabase
             .from('users')
@@ -183,6 +205,8 @@ function App() {
             `)
             .eq('id', session.user.id)
             .single();
+          
+          if (!mounted) return;
           
           if (error && error.code === 'PGRST116') {
             // User exists in auth but not in public.users table, create profile
@@ -199,6 +223,8 @@ function App() {
               .insert([newUser])
               .select()
               .single();
+
+            if (!mounted) return;
 
             if (insertError) {
               console.error('Error creating user profile - check database configuration');
@@ -217,19 +243,12 @@ function App() {
       }
     );
 
-    return () => subscription.unsubscribe();
-  }, []);
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
+  }, []); // Remove loading dependency
 
-  // Fallback to prevent infinite loading
-  useEffect(() => {
-    const timeout = setTimeout(() => {
-      if (loading) {
-        setLoading(false);
-      }
-    }, 10000); // 10 second timeout
-
-    return () => clearTimeout(timeout);
-  }, [loading]);
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
@@ -245,25 +264,65 @@ function App() {
     setSelectedCafe(null);
   };
 
+  const handleRetry = () => {
+    setLoading(true);
+    setError(null);
+    window.location.reload();
+  };
+
   const filteredCafes = cafes.filter(cafe =>
     cafe.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     cafe.description.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  if (loading) {
+  if (loading || error || postAuthLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-amber-50 to-orange-100 flex items-center justify-center">
-        <div className="flex flex-col items-center space-y-4">
-          <div className="flex items-center space-x-3">
-            <div className="w-8 h-8 border-4 border-amber-600 border-t-transparent rounded-full animate-spin"></div>
-            <span className="text-amber-800 font-medium">Loading Manziil Café...</span>
-          </div>
-          <button
-            onClick={() => setLoading(false)}
-            className="px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors"
-          >
-            Skip Loading
-          </button>
+        <div className="text-center max-w-md mx-auto p-8">
+          {error ? (
+            // Error State
+            <>
+              <div className="w-20 h-20 bg-red-100 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg">
+                <AlertCircle className="w-10 h-10 text-red-600" />
+              </div>
+              <h2 className="text-2xl font-bold text-coffee-dark mb-4">Connection Issue</h2>
+              <p className="text-coffee-medium mb-6 leading-relaxed">{error}</p>
+              <motion.button
+                onClick={handleRetry}
+                className="inline-flex items-center px-6 py-3 bg-orange-accent text-white font-semibold rounded-xl hover:bg-orange-accent/90 transition-all duration-300 shadow-lg"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <RefreshCw className="w-5 h-5 mr-2" />
+                Try Again
+              </motion.button>
+            </>
+          ) : (
+            // Loading State
+            <>
+              {/* Animated Coffee Cup */}
+              <motion.div 
+                className="w-20 h-20 bg-orange-accent rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg"
+                animate={{ 
+                  scale: [1, 1.1, 1],
+                  rotate: [0, 5, -5, 0]
+                }}
+                transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+              >
+                <Coffee className="w-10 h-10 text-white" />
+              </motion.div>
+              
+              {/* Loading Spinner */}
+              <motion.div 
+                className="w-16 h-16 border-4 border-orange-accent border-t-transparent rounded-full mx-auto mb-4"
+                animate={{ rotate: 360 }}
+                transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+              />
+              
+              <h2 className="text-2xl font-bold text-coffee-dark mb-2">Loading Manziil Café</h2>
+              <p className="text-coffee-medium">{loadingStep}</p>
+            </>
+          )}
         </div>
       </div>
     );
@@ -354,10 +413,27 @@ function App() {
                     <div className="hidden md:flex items-center space-x-3 text-sm">
                       <button
                         onClick={() => setShowUserProfile(true)}
-                        className="w-8 h-8 bg-gradient-to-br from-orange-accent to-golden-accent rounded-full flex items-center justify-center text-text-inverse font-medium hover:scale-105 transition-transform"
+                        className="w-8 h-8 bg-gradient-to-br from-orange-accent to-golden-accent rounded-full flex items-center justify-center text-text-inverse font-medium hover:scale-105 transition-transform overflow-hidden"
                         style={{ minHeight: '44px', minWidth: '44px' }}
                       >
-                        {user.name.charAt(0).toUpperCase()}
+                        {user.avatar_url ? (
+                          <img
+                            src={user.avatar_url}
+                            alt={user.name}
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              // Fallback to initials if image fails to load
+                              const target = e.target as HTMLImageElement;
+                              target.style.display = 'none';
+                              const parent = target.parentElement;
+                              if (parent) {
+                                parent.innerHTML = user.name.charAt(0).toUpperCase();
+                              }
+                            }}
+                          />
+                        ) : (
+                          <span>{user.name.charAt(0).toUpperCase()}</span>
+                        )}
                       </button>
                       <span className="text-text-inverse/90">Welcome, {user.name}</span>
                     </div>
@@ -520,9 +596,25 @@ function App() {
         <AuthModal
           isOpen={showAuthModal}
           onClose={() => setShowAuthModal(false)}
-          onSuccess={() => {
-            checkUser();
-            fetchCafes();
+          onSuccess={async () => {
+            setShowAuthModal(false);
+            setPostAuthLoading(true);
+            setLoadingStep('Setting up your profile...');
+            
+            try {
+              await checkUser();
+              setLoadingStep('Loading your spaces...');
+              await fetchCafes();
+              setLoadingStep('Welcome to Manziil Café!');
+              
+              // Small delay to show welcome message
+              setTimeout(() => {
+                setPostAuthLoading(false);
+              }, 800);
+            } catch (error) {
+              console.error('Error during post-auth setup:', error);
+              setPostAuthLoading(false);
+            }
           }}
         />
 
