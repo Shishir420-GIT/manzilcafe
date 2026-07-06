@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ManzilCafe 3D</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>☕</text></svg>" />
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { width: 100%; height: 100%; overflow: hidden; background: #1a1210; font-family: 'Segoe UI', system-ui, sans-serif; }
+      #app { width: 100%; height: 100%; }
+      canvas { display: block; }
+
+      /* ---- Loading screen ---- */
+      #loading {
+        position: fixed; inset: 0; z-index: 100;
+        background: radial-gradient(ellipse at center, #2b1d16 0%, #140d0a 100%);
+        display: flex; flex-direction: column; align-items: center; justify-content: center;
+        color: #e8d5b7; transition: opacity 0.6s ease;
+      }
+      #loading.hidden { opacity: 0; pointer-events: none; }
+      #loading h1 { font-size: 2.2rem; letter-spacing: 0.35em; font-weight: 300; margin-bottom: 0.4rem; }
+      #loading p { opacity: 0.6; font-size: 0.85rem; letter-spacing: 0.15em; }
+      .steam { font-size: 3rem; margin-bottom: 1rem; animation: steam 2s ease-in-out infinite; }
+      @keyframes steam { 0%,100% { transform: translateY(0); opacity: .8 } 50% { transform: translateY(-6px); opacity: 1 } }
+
+      /* ---- HUD ---- */
+      #hud { position: fixed; inset: 0; pointer-events: none; z-index: 10; }
+      #prompt {
+        position: absolute; bottom: 12%; left: 50%; transform: translateX(-50%);
+        background: rgba(20, 12, 8, 0.85); color: #f3e5c8; padding: 10px 22px;
+        border-radius: 999px; font-size: 0.95rem; letter-spacing: 0.05em;
+        border: 1px solid rgba(243, 229, 200, 0.25);
+        opacity: 0; transition: opacity 0.15s; white-space: nowrap;
+      }
+      #prompt.visible { opacity: 1; }
+      #prompt kbd {
+        background: #f3e5c8; color: #2b1d16; border-radius: 5px; padding: 2px 8px;
+        font-weight: 700; margin-right: 8px; font-family: inherit;
+      }
+      #controls-hint {
+        position: absolute; bottom: 18px; left: 18px; color: rgba(243,229,200,0.5);
+        font-size: 0.75rem; line-height: 1.7; letter-spacing: 0.04em;
+      }
+      #controls-hint kbd { background: rgba(243,229,200,0.12); border-radius: 4px; padding: 1px 6px; }
+
+      /* ---- Dialogue ---- */
+      #dialogue {
+        position: absolute; bottom: 0; left: 50%; transform: translate(-50%, 110%);
+        width: min(560px, 92vw); margin-bottom: 24px;
+        background: rgba(22, 14, 10, 0.94); border: 1px solid rgba(243,229,200,0.2);
+        border-radius: 16px; padding: 18px; color: #f3e5c8;
+        transition: transform 0.35s cubic-bezier(.2,.9,.3,1.1); pointer-events: auto;
+      }
+      #dialogue.open { transform: translate(-50%, 0); }
+      #dialogue header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+      #dialogue header h3 { font-weight: 600; font-size: 1rem; letter-spacing: 0.08em; }
+      #dialogue header button { background: none; border: none; color: #f3e5c8; opacity: 0.6; cursor: pointer; font-size: 1.1rem; }
+      #dialogue-log { max-height: 180px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px; }
+      .msg { padding: 8px 12px; border-radius: 10px; font-size: 0.9rem; line-height: 1.45; max-width: 85%; }
+      .msg.npc { background: rgba(243,229,200,0.1); align-self: flex-start; }
+      .msg.player { background: rgba(196, 132, 65, 0.35); align-self: flex-end; }
+      #dialogue-form { display: flex; gap: 8px; }
+      #dialogue-input {
+        flex: 1; background: rgba(243,229,200,0.08); border: 1px solid rgba(243,229,200,0.2);
+        border-radius: 10px; padding: 10px 14px; color: #f3e5c8; font-size: 0.9rem; outline: none;
+      }
+      #dialogue-input:focus { border-color: rgba(243,229,200,0.5); }
+      #dialogue-form button {
+        background: #c48441; border: none; border-radius: 10px; padding: 0 18px;
+        color: #1a0f08; font-weight: 700; cursor: pointer;
+      }
+
+      /* ---- Character customization ---- */
+      #customize-btn {
+        position: absolute; bottom: 18px; right: 18px; pointer-events: auto;
+        background: rgba(20, 12, 8, 0.85); color: #f3e5c8;
+        border: 1px solid rgba(243,229,200,0.25); border-radius: 999px;
+        padding: 9px 18px; font-size: 0.85rem; letter-spacing: 0.05em; cursor: pointer;
+        transition: background 0.15s, border-color 0.15s;
+      }
+      #customize-btn:hover, #customize-btn.active {
+        background: rgba(196,132,65,0.85); border-color: rgba(243,229,200,0.5); color: #1a0f08;
+      }
+      #character-menu {
+        position: absolute; top: 50%; right: 24px; transform: translate(120%, -50%);
+        width: min(340px, 92vw); max-height: 82vh; overflow-y: auto;
+        background: rgba(22, 14, 10, 0.95); border: 1px solid rgba(243,229,200,0.2);
+        border-radius: 16px; padding: 18px; color: #f3e5c8; pointer-events: auto;
+        transition: transform 0.35s cubic-bezier(.2,.9,.3,1.1);
+      }
+      #character-menu.open { transform: translate(0, -50%); }
+      #character-menu header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+      #character-menu header h3 { font-weight: 600; font-size: 1rem; letter-spacing: 0.08em; }
+      #character-menu header button { background: none; border: none; color: #f3e5c8; opacity: 0.6; cursor: pointer; font-size: 1.1rem; }
+      .cm-row { margin-bottom: 14px; }
+      .cm-row > label { display: block; font-size: 0.72rem; letter-spacing: 0.12em; text-transform: uppercase; opacity: 0.55; margin-bottom: 7px; }
+      .cm-opts, .cm-swatches { display: flex; flex-wrap: wrap; gap: 7px; }
+      .cm-chip {
+        background: rgba(243,229,200,0.08); border: 1px solid rgba(243,229,200,0.2);
+        border-radius: 8px; padding: 6px 12px; color: #f3e5c8; font-size: 0.8rem; cursor: pointer;
+        transition: background 0.12s, border-color 0.12s;
+      }
+      .cm-chip:hover { background: rgba(243,229,200,0.16); }
+      .cm-chip.sel { background: #c48441; border-color: #c48441; color: #1a0f08; font-weight: 700; }
+      .cm-swatch {
+        width: 30px; height: 30px; border-radius: 50%; cursor: pointer;
+        border: 2px solid rgba(243,229,200,0.25); transition: transform 0.12s, border-color 0.12s;
+      }
+      .cm-swatch:hover { transform: scale(1.12); }
+      .cm-swatch.sel { border-color: #f3e5c8; box-shadow: 0 0 0 2px rgba(196,132,65,0.9); }
+    </style>
+    <script type="module" crossorigin src="/assets/index-BjaNnNvE.js"></script>
+  </head>
+  <body>
+    <div id="app"></div>
+
+    <div id="loading">
+      <div class="steam">☕</div>
+      <h1>MANZIL</h1>
+      <p id="loading-status">BREWING THE CAFÉ…</p>
+    </div>
+
+    <div id="hud">
+      <div id="prompt"><kbd>E</kbd><span id="prompt-text"></span></div>
+      <div id="controls-hint">
+        <kbd>W A S D</kbd> move &nbsp; <kbd>Shift</kbd> run &nbsp; <kbd>E</kbd> interact &nbsp; drag mouse to look
+      </div>
+
+      <button id="customize-btn">🧍 Customize</button>
+      <div id="character-menu">
+        <header>
+          <h3>YOUR AVATAR</h3>
+          <button id="character-close" title="Close">✕</button>
+        </header>
+        <div class="cm-row"><label>Gender</label><div id="cm-gender" class="cm-opts"></div></div>
+        <div class="cm-row"><label>Skin</label><div id="cm-skin" class="cm-swatches"></div></div>
+        <div class="cm-row"><label>Hair style</label><div id="cm-hairstyle" class="cm-opts"></div></div>
+        <div class="cm-row"><label>Hair color</label><div id="cm-hair" class="cm-swatches"></div></div>
+        <div class="cm-row"><label>Outfit</label><div id="cm-outfit" class="cm-swatches"></div></div>
+      </div>
+      <div id="dialogue">
+        <header>
+          <h3 id="dialogue-name">BARISTA</h3>
+          <button id="dialogue-close" title="Close">✕</button>
+        </header>
+        <div id="dialogue-log"></div>
+        <form id="dialogue-form">
+          <input id="dialogue-input" type="text" placeholder="Say something…" autocomplete="off" />
+          <button type="submit">Send</button>
+        </form>
+      </div>
+    </div>
+
+  </body>
+</html>
